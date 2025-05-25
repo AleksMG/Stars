@@ -1,144 +1,185 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Улучшенная симуляция звездного коллапса</title>
+    <title>Вращение звезды при коллапсе</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #121212;
+            background-color: #0f0f1a;
             color: #fff;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
         }
         .container {
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
         .controls {
             flex: 1;
-            min-width: 350px;
-            background: #1e1e1e;
+            min-width: 300px;
+            background: #1a1a2e;
             padding: 20px;
-            border-radius: 10px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
         .simulation {
             flex: 2;
-            min-width: 600px;
+            min-width: 500px;
             height: 600px;
             background: #000;
-            border-radius: 10px;
+            border-radius: 15px;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 0 30px rgba(0,100,255,0.3);
         }
         canvas {
             width: 100%;
             height: 100%;
         }
+        h1 {
+            color: #4fc3f7;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px rgba(79,195,247,0.5);
+        }
         .control-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
         label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            color: #4fc3f7;
             font-weight: bold;
         }
         input[type="range"] {
             width: 100%;
+            height: 10px;
+            background: #333;
+            border-radius: 5px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #4fc3f7;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(79,195,247,0.8);
         }
         .value-display {
-            font-size: 0.9em;
-            color: #aaa;
+            display: inline-block;
+            margin-top: 5px;
+            padding: 3px 8px;
+            background: rgba(79,195,247,0.2);
+            border-radius: 5px;
+            font-family: monospace;
         }
         button {
-            background: #4CAF50;
+            background: linear-gradient(135deg, #4fc3f7, #2196f3);
             color: white;
             border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
+            padding: 12px 20px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
-            margin-top: 10px;
-            margin-right: 10px;
+            margin: 10px 5px 0 0;
+            transition: all 0.3s;
+            box-shadow: 0 0 10px rgba(33,150,243,0.5);
         }
         button:hover {
-            background: #45a049;
-        }
-        h1 {
-            color: #4CAF50;
-            text-align: center;
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(33,150,243,0.8);
         }
         .info-panel {
             margin-top: 20px;
             padding: 15px;
-            background: #2a2a2a;
+            background: rgba(26,35,46,0.7);
+            border-radius: 10px;
+            border-left: 4px solid #4fc3f7;
+        }
+        .info-item {
+            margin: 8px 0;
+        }
+        .info-label {
+            color: #4fc3f7;
+            font-weight: bold;
+        }
+        .rotation-indicator {
+            margin-top: 20px;
+            height: 5px;
+            background: linear-gradient(90deg, #f44336, #ff9800, #4caf50, #2196f3, #9c27b0);
             border-radius: 5px;
+            position: relative;
         }
-        .log {
-            height: 100px;
-            overflow-y: auto;
-            background: #000;
-            padding: 10px;
-            border: 1px solid #333;
-            margin-top: 10px;
-            font-family: monospace;
-        }
-        .log p {
-            margin: 2px 0;
-            font-size: 12px;
+        .rotation-marker {
+            position: absolute;
+            top: -5px;
+            width: 15px;
+            height: 15px;
+            background: #fff;
+            border-radius: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 10px #fff;
         }
     </style>
 </head>
 <body>
-    <h1>Улучшенная симуляция звездного коллапса</h1>
+    <h1>★ Визуализация вращения звезды при коллапсе ★</h1>
     
     <div class="container">
         <div class="controls">
             <div class="control-group">
-                <label for="initialMass">Масса звезды (M☉):</label>
-                <input type="range" id="initialMass" min="0.1" max="1000" step="0.1" value="10">
-                <span class="value-display" id="initialMassValue">10 M☉</span>
+                <label for="initialMass">Масса звезды (M☉): <span class="value-display" id="initialMassValue">10</span></label>
+                <input type="range" id="initialMass" min="0.1" max="100" step="0.1" value="10">
             </div>
             
             <div class="control-group">
-                <label for="metallicity">Металличность (Z/Z☉):</label>
-                <input type="range" id="metallicity" min="0.001" max="2" step="0.001" value="1">
-                <span class="value-display" id="metallicityValue">1 Z/Z☉</span>
+                <label for="initialRadius">Радиус (R☉): <span class="value-display" id="initialRadiusValue">5</span></label>
+                <input type="range" id="initialRadius" min="0.1" max="20" step="0.1" value="5">
             </div>
             
             <div class="control-group">
-                <label for="initialDiameter">Диаметр (R☉):</label>
-                <input type="range" id="initialDiameter" min="0.1" max="2000" step="1" value="100">
-                <span class="value-display" id="initialDiameterValue">100 R☉</span>
+                <label for="rotationSpeed">Вращение (об/день): <span class="value-display" id="rotationSpeedValue">1</span></label>
+                <input type="range" id="rotationSpeed" min="0.01" max="1000" step="0.01" value="1">
+                <div class="rotation-indicator">
+                    <div class="rotation-marker" id="rotationMarker"></div>
+                </div>
             </div>
             
             <div class="control-group">
-                <label for="rotationSpeed">Вращение (об/день):</label>
-                <input type="range" id="rotationSpeed" min="0.001" max="1000" step="0.001" value="1">
-                <span class="value-display" id="rotationSpeedValue">1 об/день</span>
+                <label for="collapseFactor">Степень коллапса: <span class="value-display" id="collapseFactorValue">100x</span></label>
+                <input type="range" id="collapseFactor" min="10" max="100000" step="10" value="100">
             </div>
             
-            <div class="control-group">
-                <label for="magneticField">Магнитное поле (Тл):</label>
-                <input type="range" id="magneticField" min="0" max="1e12" step="1e8" value="1e4">
-                <span class="value-display" id="magneticFieldValue">10 000 Тл</span>
-            </div>
-            
-            <button id="startBtn">Начать симуляцию</button>
-            <button id="pauseBtn">Пауза</button>
-            <button id="resetBtn">Сбросить</button>
+            <button id="startBtn">▶ Запуск</button>
+            <button id="pauseBtn">⏸ Пауза</button>
+            <button id="resetBtn">⏹ Сброс</button>
             
             <div class="info-panel">
-                <h3>Результаты коллапса:</h3>
-                <p>Тип остатка: <span id="remnantType">-</span></p>
-                <p>Финальный радиус: <span id="finalRadius">-</span></p>
-                <p>Финальная скорость вращения: <span id="finalRotation">-</span></p>
-                <p>Период пульсара: <span id="pulsarPeriod">-</span></p>
-                <p>Гравитация на поверхности: <span id="surfaceGravity">-</span></p>
-                <div class="log" id="eventLog"></div>
+                <div class="info-item">
+                    <span class="info-label">Текущая скорость:</span>
+                    <span id="currentRotation">1 об/день</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Финальная скорость:</span>
+                    <span id="finalRotation">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Увеличение скорости:</span>
+                    <span id="speedIncrease">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Тип остатка:</span>
+                    <span id="remnantType">-</span>
+                </div>
             </div>
         </div>
         
@@ -152,15 +193,12 @@
         const SOLAR_MASS = 1.989e30; // кг
         const SOLAR_RADIUS = 695700; // км
         const G = 6.67430e-11; // гравитационная постоянная
-        const C = 299792458; // скорость света
-        const SCHWARZSCHILD_RADIUS = 2 * G * SOLAR_MASS / (C * C); // радиус Шварцшильда для Солнца (км)
+        const DAY_SECONDS = 86400;
         
-        // Получаем элементы DOM
+        // Настройка canvas
         const canvas = document.getElementById('starCanvas');
         const ctx = canvas.getContext('2d');
-        const eventLog = document.getElementById('eventLog');
         
-        // Устанавливаем размер canvas
         function resizeCanvas() {
             canvas.width = canvas.offsetWidth;
             canvas.height = canvas.offsetHeight;
@@ -170,50 +208,20 @@
         
         // Элементы управления
         const initialMassSlider = document.getElementById('initialMass');
-        const metallicitySlider = document.getElementById('metallicity');
-        const initialDiameterSlider = document.getElementById('initialDiameter');
+        const initialRadiusSlider = document.getElementById('initialRadius');
         const rotationSpeedSlider = document.getElementById('rotationSpeed');
-        const magneticFieldSlider = document.getElementById('magneticField');
+        const collapseFactorSlider = document.getElementById('collapseFactor');
         
         const initialMassValue = document.getElementById('initialMassValue');
-        const metallicityValue = document.getElementById('metallicityValue');
-        const initialDiameterValue = document.getElementById('initialDiameterValue');
+        const initialRadiusValue = document.getElementById('initialRadiusValue');
         const rotationSpeedValue = document.getElementById('rotationSpeedValue');
-        const magneticFieldValue = document.getElementById('magneticFieldValue');
+        const collapseFactorValue = document.getElementById('collapseFactorValue');
+        const rotationMarker = document.getElementById('rotationMarker');
         
-        const remnantTypeDisplay = document.getElementById('remnantType');
-        const finalRadiusDisplay = document.getElementById('finalRadius');
+        const currentRotationDisplay = document.getElementById('currentRotation');
         const finalRotationDisplay = document.getElementById('finalRotation');
-        const pulsarPeriodDisplay = document.getElementById('pulsarPeriod');
-        const surfaceGravityDisplay = document.getElementById('surfaceGravity');
-        
-        // Обновляем отображаемые значения
-        function updateSliderValues() {
-            initialMassValue.textContent = parseFloat(initialMassSlider.value).toFixed(1) + ' M☉';
-            metallicityValue.textContent = parseFloat(metallicitySlider.value).toFixed(3) + ' Z/Z☉';
-            initialDiameterValue.textContent = parseFloat(initialDiameterSlider.value).toFixed(0) + ' R☉';
-            
-            const rotationSpeed = parseFloat(rotationSpeedSlider.value);
-            rotationSpeedValue.textContent = rotationSpeed < 1 ? 
-                rotationSpeed.toExponential(2) + ' об/день' : 
-                rotationSpeed.toFixed(3) + ' об/день';
-            
-            const magneticField = parseFloat(magneticFieldSlider.value);
-            magneticFieldValue.textContent = formatScientific(magneticField) + ' Тл';
-        }
-        
-        function formatScientific(value) {
-            if (value < 1e3) return value.toFixed(0);
-            if (value < 1e6) return (value/1e3).toFixed(1) + ' тыс';
-            if (value < 1e9) return (value/1e6).toFixed(1) + ' млн';
-            return (value/1e9).toFixed(1) + ' млрд';
-        }
-        
-        initialMassSlider.addEventListener('input', updateSliderValues);
-        metallicitySlider.addEventListener('input', updateSliderValues);
-        initialDiameterSlider.addEventListener('input', updateSliderValues);
-        rotationSpeedSlider.addEventListener('input', updateSliderValues);
-        magneticFieldSlider.addEventListener('input', updateSliderValues);
+        const speedIncreaseDisplay = document.getElementById('speedIncrease');
+        const remnantTypeDisplay = document.getElementById('remnantType');
         
         // Параметры симуляции
         let animationId = null;
@@ -221,157 +229,142 @@
         let isSimulating = false;
         let isPaused = false;
         
-        // Звезда
+        // Параметры звезды
         let star = {
             mass: 10,
-            metallicity: 1,
-            diameter: 100,
-            rotationSpeed: 1,
-            magneticField: 1e4,
-            color: [255, 200, 100]
+            radius: 5,
+            rotationSpeed: 1, // об/день
+            angularVelocity: 0,
+            color: [255, 200, 100],
+            flattening: 0
         };
         
-        // Остаток
+        // Параметры остатка
         let remnant = {
-            type: '',
-            mass: 0,
             radius: 0,
             rotationSpeed: 0,
-            magneticField: 0,
+            angularVelocity: 0,
             color: [100, 150, 255],
-            age: 0
+            type: ''
         };
         
-        // Функция логирования событий
-        function logEvent(message) {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString();
-            const logEntry = document.createElement('p');
-            logEntry.textContent = `[${timeStr}] ${message}`;
-            eventLog.appendChild(logEntry);
-            eventLog.scrollTop = eventLog.scrollHeight;
+        // Обновление отображаемых значений
+        function updateSliderValues() {
+            initialMassValue.textContent = initialMassSlider.value;
+            initialRadiusValue.textContent = initialRadiusSlider.value;
+            
+            const rotationSpeed = parseFloat(rotationSpeedSlider.value);
+            rotationSpeedValue.textContent = rotationSpeed < 1 ? 
+                rotationSpeed.toExponential(2) : 
+                rotationSpeed.toFixed(2);
+            
+            // Позиция маркера вращения
+            const speedPercent = Math.log10(rotationSpeed + 1) / Math.log10(1001) * 100;
+            rotationMarker.style.left = `${speedPercent}%`;
+            
+            collapseFactorValue.textContent = `${collapseFactorSlider.value}x`;
         }
         
-        // Функция определения типа остатка (более точная)
-        function determineRemnantType(mass, metallicity) {
-            // Учитываем металличность - звезды с высокой металличностью теряют больше массы
-            const effectiveMass = mass * (1 - 0.2 * Math.log10(metallicity));
+        // Применение значений из слайдеров
+        function applySliderValues() {
+            star.mass = parseFloat(initialMassSlider.value);
+            star.radius = parseFloat(initialRadiusSlider.value);
+            star.rotationSpeed = parseFloat(rotationSpeedSlider.value);
+            star.angularVelocity = star.rotationSpeed * 2 * Math.PI / DAY_SECONDS;
             
-            if (effectiveMass < 8) {
-                // Белый карлик (углеродно-кислородный)
-                if (effectiveMass < 0.5) return 'Гелиевый белый карлик';
-                return 'Углеродно-кислородный белый карлик';
-            } else if (effectiveMass < 25) {
-                // Нейтронная звезда
-                return 'Нейтронная звезда';
-            } else if (effectiveMass < 40) {
-                // Черная дыра звездной массы (коллапс ядра)
-                return 'Черная дыра (звездной массы)';
-            } else {
-                // Прямой коллапс в черную дыру
-                return 'Черная дыра (прямой коллапс)';
-            }
+            // Эллиптичность из-за вращения
+            star.flattening = Math.min(0.4, star.rotationSpeed * 0.01);
+            
+            updateSliderValues();
         }
         
-        // Функция расчета параметров остатка
-        function calculateRemnantProperties(star) {
-            const remnant = {};
-            remnant.type = determineRemnantType(star.mass, star.metallicity);
-            
-            // Расчет массы остатка (учитываем потери при взрыве)
-            if (remnant.type.includes('белый карлик')) {
-                remnant.mass = Math.min(1.44, star.mass * 0.6); // Предел Чандрасекара
-            } else if (remnant.type.includes('нейтронная звезда')) {
-                remnant.mass = Math.min(2.5, star.mass * 0.2); // Предел Оппенгеймера-Волкова
-            } else {
-                remnant.mass = star.mass * 0.9; // Черные дыры сохраняют большую часть массы
-            }
-            
-            // Расчет радиуса остатка
-            if (remnant.type.includes('белый карлик')) {
-                remnant.radius = 0.01 * Math.pow(remnant.mass / 1.4, -1/3); // R☉
-            } else if (remnant.type.includes('нейтронная звезда')) {
-                remnant.radius = 0.00003 * Math.pow(remnant.mass / 1.4, -1/3); // R☉
-            } else {
-                // Радиус Шварцшильда
-                remnant.radius = 2 * G * remnant.mass * SOLAR_MASS / (C * C) / 1000; // км -> R☉
-            }
+        // Определение типа остатка
+        function determineRemnantType(mass) {
+            if (mass < 1.4) return 'Белый карлик';
+            if (mass < 3) return 'Нейтронная звезда';
+            return 'Черная дыра';
+        }
+        
+        // Расчет параметров после коллапса
+        function calculateRemnant() {
+            const collapseFactor = parseFloat(collapseFactorSlider.value);
+            remnant.radius = star.radius / collapseFactor;
             
             // Сохранение момента импульса (I1ω1 = I2ω2)
-            // Для сферы момент инерции I = 2/5 MR²
-            const initialAngularSpeed = star.rotationSpeed * (2 * Math.PI / 86400); // рад/с
-            const finalAngularSpeed = initialAngularSpeed * 
-                (2/5 * star.mass * SOLAR_MASS * Math.pow(star.diameter * SOLAR_RADIUS * 1000 / 2, 2)) / 
-                (2/5 * remnant.mass * SOLAR_MASS * Math.pow(remnant.radius * SOLAR_RADIUS * 1000, 2));
+            // Для сферы I ~ MR², но учитываем уплощение
+            const initialMoment = star.mass * Math.pow(star.radius * (1 - star.flattening), 2) * star.angularVelocity;
+            remnant.angularVelocity = initialMoment / (star.mass * Math.pow(remnant.radius, 2));
+            remnant.rotationSpeed = remnant.angularVelocity * DAY_SECONDS / (2 * Math.PI);
             
-            remnant.rotationSpeed = finalAngularSpeed * (86400 / (2 * Math.PI)); // об/день
-            
-            // Учет релятивистских эффектов для нейтронных звезд
-            if (remnant.type.includes('нейтронная звезда')) {
-                const keplerianLimit = 1500 * Math.pow(remnant.mass / 1.4, 0.5) * 
-                    Math.pow(remnant.radius / 10, -1.5); // об/мин
-                
-                if (remnant.rotationSpeed * 1440 > keplerianLimit) {
-                    remnant.rotationSpeed = keplerianLimit / 1440; // ограничение скорости вращения
-                }
+            // Ограничение скорости для нейтронных звезд (не может превышать ~1000 об/с)
+            if (remnant.rotationSpeed > 1000 * DAY_SECONDS) {
+                remnant.rotationSpeed = 1000 * DAY_SECONDS;
+                remnant.angularVelocity = remnant.rotationSpeed * 2 * Math.PI / DAY_SECONDS;
             }
             
-            // Магнитное поле (усиление при коллапсе)
-            remnant.magneticField = star.magneticField * 
-                Math.pow(star.diameter * SOLAR_RADIUS / (remnant.radius * SOLAR_RADIUS), 2);
+            remnant.type = determineRemnantType(star.mass);
             
             // Цвет остатка
-            if (remnant.type.includes('белый карлик')) {
-                remnant.color = [200, 220, 255]; // голубовато-белый
-            } else if (remnant.type.includes('нейтронная звезда')) {
-                remnant.color = [100, 150, 255]; // голубой
+            if (remnant.type === 'Белый карлик') {
+                remnant.color = [200, 220, 255];
+            } else if (remnant.type === 'Нейтронная звезда') {
+                remnant.color = [100, 150, 255];
             } else {
-                remnant.color = [50, 50, 50]; // почти черный
+                remnant.color = [50, 50, 80];
             }
             
-            return remnant;
+            // Обновление информации
+            finalRotationDisplay.textContent = remnant.rotationSpeed.toExponential(2) + ' об/день';
+            speedIncreaseDisplay.textContent = (remnant.rotationSpeed / star.rotationSpeed).toExponential(2) + 'x';
+            remnantTypeDisplay.textContent = remnant.type;
         }
         
-        // Функция расчета периода пульсара
-        function calculatePulsarPeriod(rotationSpeed) {
-            if (rotationSpeed <= 0) return 'Нет';
-            const period = 1 / (rotationSpeed * 24); // в часах
-            
-            if (period < 1e-6) return '< 1 мкс';
-            if (period < 0.001) return (period * 3600 * 1e6).toFixed(2) + ' мкс';
-            if (period < 1) return (period * 3600 * 1000).toFixed(2) + ' мс';
-            if (period < 60) return period.toFixed(4) + ' ч';
-            return (period / 24).toFixed(2) + ' дн';
-        }
-        
-        // Функция расчета гравитации на поверхности
-        function calculateSurfaceGravity(mass, radius) {
-            const gravity = G * mass * SOLAR_MASS / Math.pow(radius * SOLAR_RADIUS * 1000, 2);
-            return (gravity / 9.8).toExponential(2) + ' g';
-        }
-        
-        // Функция рисования звезды
-        function drawStar(x, y, radius, color, rotationAngle = 0, type = 'normal') {
+        // Рисование вращающейся звезды
+        function drawRotatingStar(x, y, radius, color, rotationAngle, flattening = 0, isRemnant = false) {
             ctx.save();
             ctx.translate(x, y);
             ctx.rotate(rotationAngle);
             
-            // Рисуем звезду/остаток
-            const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
+            // Эллипс с учетом уплощения
+            const verticalRadius = radius * (1 - flattening);
             
-            if (type === 'blackhole') {
-                // Черная дыра с аккреционным диском
-                gradient.addColorStop(0, 'rgba(0, 0, 0, 1)');
-                gradient.addColorStop(0.9, 'rgba(30, 30, 30, 0.8)');
-                gradient.addColorStop(0.95, 'rgba(100, 100, 255, 0.5)');
-                gradient.addColorStop(1, 'rgba(200, 200, 255, 0)');
+            // Градиент
+            const gradient = ctx.createRadialGradient(
+                0, 0, 0,
+                0, 0, radius
+            );
+            gradient.addColorStop(0, `rgba(${color[0]}, ${color[1]}, ${color[2]}, 1)`);
+            gradient.addColorStop(1, `rgba(${color[0]*0.5}, ${color[1]*0.5}, ${color[2]*0.5}, 1)`);
+            
+            // Рисуем эллипс
+            ctx.beginPath();
+            ctx.ellipse(0, 0, radius, verticalRadius, 0, 0, Math.PI * 2);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            // Для нейтронной звезды добавляем пучки излучения
+            if (isRemnant && remnant.type === 'Нейтронная звезда') {
+                const pulseIntensity = 0.7 + 0.3 * Math.sin(simulationTime * 10);
                 
                 ctx.beginPath();
-                ctx.arc(0, 0, radius, 0, Math.PI * 2);
-                ctx.fillStyle = gradient;
+                ctx.moveTo(0, 0);
+                ctx.lineTo(radius * 5, -radius * 0.7);
+                ctx.lineTo(radius * 5, radius * 0.7);
+                ctx.closePath();
+                ctx.fillStyle = `rgba(255, 255, 255, ${pulseIntensity})`;
                 ctx.fill();
                 
-                // Аккреционный диск
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(-radius * 5, -radius * 0.7);
+                ctx.lineTo(-radius * 5, radius * 0.7);
+                ctx.closePath();
+                ctx.fillStyle = `rgba(255, 255, 255, ${pulseIntensity})`;
+                ctx.fill();
+            }
+            
+            // Для черной дыры добавляем аккреционный диск
+            if (isRemnant && remnant.type === 'Черная дыра') {
                 ctx.beginPath();
                 ctx.ellipse(0, 0, radius * 3, radius * 1.5, 0, 0, Math.PI * 2);
                 const diskGradient = ctx.createLinearGradient(-radius * 3, 0, radius * 3, 0);
@@ -380,99 +373,32 @@
                 diskGradient.addColorStop(1, 'rgba(200, 200, 255, 0.1)');
                 ctx.fillStyle = diskGradient;
                 ctx.fill();
-                
-                // Релятивистские струи
-                ctx.beginPath();
-                ctx.moveTo(0, -radius * 0.8);
-                ctx.lineTo(0, -radius * 4);
-                ctx.lineWidth = radius * 0.2;
-                ctx.strokeStyle = 'rgba(100, 150, 255, 0.7)';
-                ctx.stroke();
-                
-                ctx.beginPath();
-                ctx.moveTo(0, radius * 0.8);
-                ctx.lineTo(0, radius * 4);
-                ctx.lineWidth = radius * 0.2;
-                ctx.strokeStyle = 'rgba(100, 150, 255, 0.7)';
-                ctx.stroke();
-            } else {
-                // Нормальная звезда или нейтронная звезда
-                gradient.addColorStop(0, `rgb(${color[0]}, ${color[1]}, ${color[2]})`);
-                gradient.addColorStop(1, `rgb(${color[0]*0.5}, ${color[1]*0.5}, ${color[2]*0.5})`);
-                
-                ctx.beginPath();
-                ctx.arc(0, 0, radius, 0, Math.PI * 2);
-                ctx.fillStyle = gradient;
-                ctx.fill();
-                
-                // Для нейтронной звезды добавляем пучки излучения
-                if (type === 'neutron') {
-                    const pulseIntensity = 0.7 + 0.3 * Math.sin(simulationTime * 10);
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(0, 0);
-                    ctx.lineTo(radius * 5, -radius * 0.7);
-                    ctx.lineTo(radius * 5, radius * 0.7);
-                    ctx.closePath();
-                    ctx.fillStyle = `rgba(255, 255, 255, ${pulseIntensity})`;
-                    ctx.fill();
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(0, 0);
-                    ctx.lineTo(-radius * 5, -radius * 0.7);
-                    ctx.lineTo(-radius * 5, radius * 0.7);
-                    ctx.closePath();
-                    ctx.fillStyle = `rgba(255, 255, 255, ${pulseIntensity})`;
-                    ctx.fill();
-                }
             }
             
             ctx.restore();
         }
         
-        // Функция рисования фона
+        // Рисование фона
         function drawBackground() {
-            // Фон космоса
+            // Космический фон
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Рисуем звезды на фоне
-            for (let i = 0; i < 200; i++) {
+            // Звезды
+            for (let i = 0; i < 100; i++) {
                 const x = Math.random() * canvas.width;
                 const y = Math.random() * canvas.height;
-                const size = Math.random() * 3;
-                const brightness = 50 + Math.random() * 205;
-                const twinkle = Math.random() > 0.8 ? 0.5 + Math.random() * 0.5 : 1;
+                const size = Math.random() * 2;
+                const brightness = Math.random() * 200 + 55;
                 
                 ctx.beginPath();
                 ctx.arc(x, y, size, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(${brightness}, ${brightness}, ${brightness}, ${twinkle})`;
-                ctx.fill();
-            }
-            
-            // Туманности
-            if (Math.random() > 0.95) {
-                const nebulaX = Math.random() * canvas.width;
-                const nebulaY = Math.random() * canvas.height;
-                const nebulaSize = 50 + Math.random() * 150;
-                const nebulaColor = Math.random() > 0.5 ? 
-                    `rgba(100, 50, 150, 0.02)` : 
-                    `rgba(50, 100, 150, 0.02)`;
-                
-                ctx.beginPath();
-                ctx.arc(nebulaX, nebulaY, nebulaSize, 0, Math.PI * 2);
-                const gradient = ctx.createRadialGradient(
-                    nebulaX, nebulaY, 0, 
-                    nebulaX, nebulaY, nebulaSize
-                );
-                gradient.addColorStop(0, nebulaColor);
-                gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-                ctx.fillStyle = gradient;
+                ctx.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness})`;
                 ctx.fill();
             }
         }
         
-        // Функция анимации
+        // Анимация
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawBackground();
@@ -481,173 +407,132 @@
             const centerY = canvas.height / 2;
             const maxRadius = Math.min(canvas.width, canvas.height) * 0.4;
             
-            // Рассчитываем текущее состояние анимации
+            // Прогресс анимации (0-1)
             const animationDuration = 5; // секунд
             const progress = Math.min(simulationTime / animationDuration, 1);
             
-            // Интерполяция между начальным и конечным состоянием
-            let currentRadius, currentColor, currentRotation, currentType;
+            // Интерполяция параметров
+            let currentRadius, currentColor, currentFlattening, rotationAngle;
+            let isRemnant = false;
             
-            if (progress < 0.2) {
-                // Фаза до коллапса - звезда слегка пульсирует
-                const phaseProgress = progress / 0.2;
-                const pulse = 1 + 0.05 * Math.sin(simulationTime * 5);
-                currentRadius = star.diameter / 2 * pulse;
+            if (progress < 0.3) {
+                // Фаза до коллапса
+                const phaseProgress = progress / 0.3;
+                currentRadius = star.radius * (1 - phaseProgress * 0.1); // небольшое сжатие
                 currentColor = star.color;
-                currentRotation = star.rotationSpeed * simulationTime * 0.1;
-                currentType = 'normal';
+                currentFlattening = star.flattening;
+                rotationAngle = star.angularVelocity * simulationTime;
                 
-                // Эффект нестабильности перед коллапсом
-                if (phaseProgress > 0.8) {
-                    const instability = (phaseProgress - 0.8) / 0.2;
-                    currentColor = [
-                        star.color[0] + (255 - star.color[0]) * instability,
-                        star.color[1] * (1 - instability * 0.5),
-                        star.color[2] * (1 - instability * 0.5)
-                    ];
-                }
-            } else if (progress < 0.5) {
-                // Фаза коллапса - быстрое сжатие
-                const phaseProgress = (progress - 0.2) / 0.3;
-                const collapseFactor = Math.pow(phaseProgress, 3);
+                // Показываем текущую скорость вращения
+                currentRotationDisplay.textContent = star.rotationSpeed.toFixed(2) + ' об/день';
+            } else if (progress < 0.8) {
+                // Фаза коллапса
+                const phaseProgress = (progress - 0.3) / 0.5;
+                currentRadius = star.radius * 0.9 * (1 - phaseProgress) + remnant.radius * phaseProgress;
                 
-                currentRadius = star.diameter / 2 * (1 - collapseFactor) + 
-                              remnant.radius * collapseFactor;
-                
+                // Интерполяция цвета
                 currentColor = [
                     star.color[0] * (1 - phaseProgress) + remnant.color[0] * phaseProgress,
                     star.color[1] * (1 - phaseProgress) + remnant.color[1] * phaseProgress,
                     star.color[2] * (1 - phaseProgress) + remnant.color[2] * phaseProgress
                 ];
                 
-                currentRotation = star.rotationSpeed * simulationTime * 0.1 * (1 - phaseProgress) + 
-                                 remnant.rotationSpeed * simulationTime * 0.1 * phaseProgress;
+                // Уменьшение уплощения
+                currentFlattening = star.flattening * (1 - phaseProgress);
                 
-                currentType = remnant.type.includes('черная дыра') ? 'blackhole' : 
-                            (remnant.type.includes('нейтронная') ? 'neutron' : 'normal');
+                // Интерполяция скорости вращения
+                const currentAngularVelocity = star.angularVelocity * (1 - phaseProgress) + 
+                                             remnant.angularVelocity * phaseProgress;
+                rotationAngle = star.angularVelocity * 0.3 * animationDuration + 
+                               currentAngularVelocity * (simulationTime - 0.3 * animationDuration);
                 
-                // Эффект вспышки сверхновой (для массивных звезд)
-                if (star.mass > 8 && phaseProgress > 0.3 && phaseProgress < 0.7) {
-                    const flashIntensity = Math.sin((phaseProgress - 0.3) * Math.PI / 0.4) * 255;
-                    const flashRadius = currentRadius * (5 + 20 * (1 - phaseProgress));
-                    
+                // Показываем текущую скорость вращения
+                const currentRotationSpeed = currentAngularVelocity * DAY_SECONDS / (2 * Math.PI);
+                currentRotationDisplay.textContent = currentRotationSpeed.toExponential(2) + ' об/день';
+                
+                // Эффект вспышки при коллапсе
+                if (phaseProgress > 0.4 && phaseProgress < 0.6) {
+                    const flashIntensity = Math.sin((phaseProgress - 0.4) * Math.PI / 0.2) * 0.7;
                     ctx.beginPath();
-                    ctx.arc(centerX, centerY, flashRadius, 0, Math.PI * 2);
+                    ctx.arc(centerX, centerY, currentRadius * 10, 0, Math.PI * 2);
                     const gradient = ctx.createRadialGradient(
-                        centerX, centerY, currentRadius, 
-                        centerX, centerY, flashRadius
+                        centerX, centerY, currentRadius,
+                        centerX, centerY, currentRadius * 10
                     );
-                    gradient.addColorStop(0, `rgba(255, 255, 255, ${flashIntensity/255})`);
+                    gradient.addColorStop(0, `rgba(255, 255, 255, ${flashIntensity})`);
                     gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
                     ctx.fillStyle = gradient;
                     ctx.fill();
-                    
-                    // Выброс вещества
-                    for (let i = 0; i < 20; i++) {
-                        const angle = Math.random() * Math.PI * 2;
-                        const distance = currentRadius + Math.random() * flashRadius * 0.5;
-                        const particleX = centerX + Math.cos(angle) * distance;
-                        const particleY = centerY + Math.sin(angle) * distance;
-                        const particleSize = 1 + Math.random() * 3;
-                        
-                        ctx.beginPath();
-                        ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
-                        ctx.fillStyle = `rgba(255, ${200 - Math.random() * 100}, 100, 0.7)`;
-                        ctx.fill();
-                    }
                 }
             } else {
                 // Фаза после коллапса
                 currentRadius = remnant.radius;
                 currentColor = remnant.color;
-                currentRotation = remnant.rotationSpeed * simulationTime * 0.1;
-                currentType = remnant.type.includes('черная дыра') ? 'blackhole' : 
-                            (remnant.type.includes('нейтронная') ? 'neutron' : 'normal');
+                currentFlattening = 0;
+                rotationAngle = star.angularVelocity * 0.3 * animationDuration + 
+                              remnant.angularVelocity * (simulationTime - 0.3 * animationDuration);
+                isRemnant = true;
                 
-                // Эффект аккреции для черной дыры
-                if (currentType === 'blackhole' && Math.random() > 0.7) {
-                    const angle = Math.random() * Math.PI * 2;
-                    const startDist = currentRadius * (1.5 + Math.random() * 2);
-                    const endDist = currentRadius * 0.9;
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(
-                        centerX + Math.cos(angle) * startDist,
-                        centerY + Math.sin(angle) * startDist
-                    );
-                    ctx.lineTo(
-                        centerX + Math.cos(angle) * endDist,
-                        centerY + Math.sin(angle) * endDist
-                    );
-                    ctx.lineWidth = 1 + Math.random() * 3;
-                    ctx.strokeStyle = `rgba(100, 150, 255, ${0.3 + Math.random() * 0.4})`;
-                    ctx.stroke();
+                // Показываем финальную скорость вращения
+                currentRotationDisplay.textContent = remnant.rotationSpeed.toExponential(2) + ' об/день';
+                
+                // Эффект пульсара для нейтронной звезды
+                if (remnant.type === 'Нейтронная звезда') {
+                    const pulse = 0.7 + 0.3 * Math.sin(simulationTime * 10);
+                    currentColor = [
+                        currentColor[0] * pulse,
+                        currentColor[1] * pulse,
+                        currentColor[2] * pulse
+                    ];
                 }
             }
             
-            // Ограничиваем максимальный радиус для отображения
+            // Ограничение радиуса для отображения
             const displayRadius = Math.min(currentRadius, maxRadius);
             
             // Рисуем звезду/остаток
-            drawStar(centerX, centerY, displayRadius, currentColor, currentRotation, currentType);
+            drawRotatingStar(
+                centerX, centerY,
+                displayRadius,
+                currentColor,
+                rotationAngle,
+                currentFlattening,
+                isRemnant
+            );
             
-            // Обновляем время симуляции
+            // Обновление времени симуляции
             if (isSimulating && !isPaused && progress < 1) {
                 simulationTime += 1/60; // 60 FPS
                 animationId = requestAnimationFrame(animate);
             } else if (progress >= 1) {
                 isSimulating = false;
-                logEvent(`Симуляция завершена. Образовался ${remnant.type}`);
             }
         }
         
-        // Функция запуска симуляции
+        // Запуск симуляции
         function startSimulation() {
             if (isSimulating) return;
             
-            // Очищаем лог
-            eventLog.innerHTML = '';
+            applySliderValues();
+            calculateRemnant();
             
-            // Получаем параметры из UI
-            star.mass = parseFloat(initialMassSlider.value);
-            star.metallicity = parseFloat(metallicitySlider.value);
-            star.diameter = parseFloat(initialDiameterSlider.value);
-            star.rotationSpeed = parseFloat(rotationSpeedSlider.value);
-            star.magneticField = parseFloat(magneticFieldSlider.value);
-            
-            logEvent(`Начало симуляции для звезды ${star.mass} M☉, ${star.diameter} R☉`);
-            
-            // Рассчитываем параметры остатка
-            remnant = calculateRemnantProperties(star);
-            
-            // Обновляем UI с результатами
-            remnantTypeDisplay.textContent = remnant.type;
-            finalRadiusDisplay.textContent = (remnant.radius * SOLAR_RADIUS).toExponential(2) + ' км';
-            finalRotationDisplay.textContent = remnant.rotationSpeed.toExponential(2) + ' об/день';
-            pulsarPeriodDisplay.textContent = calculatePulsarPeriod(remnant.rotationSpeed);
-            surfaceGravityDisplay.textContent = calculateSurfaceGravity(remnant.mass, remnant.radius);
-            
-            logEvent(`Ожидаемый остаток: ${remnant.type}`);
-            logEvent(`Масса остатка: ${remnant.mass.toFixed(2)} M☉`);
-            
-            // Сбрасываем время и запускаем анимацию
             simulationTime = 0;
             isSimulating = true;
             isPaused = false;
             animate();
         }
         
-        // Функция паузы
-        function pauseSimulation() {
+        // Пауза/продолжение
+        function togglePause() {
             isPaused = !isPaused;
-            document.getElementById('pauseBtn').textContent = isPaused ? 'Продолжить' : 'Пауза';
+            document.getElementById('pauseBtn').textContent = isPaused ? '▶ Продолжить' : '⏸ Пауза';
             
             if (isSimulating && !isPaused) {
                 animate();
             }
         }
         
-        // Функция сброса
+        // Сброс
         function resetSimulation() {
             isSimulating = false;
             isPaused = false;
@@ -655,39 +540,37 @@
                 cancelAnimationFrame(animationId);
                 animationId = null;
             }
-            simulationTime = 0;
             
-            // Очищаем результаты
-            remnantTypeDisplay.textContent = '-';
-            finalRadiusDisplay.textContent = '-';
+            applySliderValues();
+            
+            // Сброс отображения
+            currentRotationDisplay.textContent = star.rotationSpeed.toFixed(2) + ' об/день';
             finalRotationDisplay.textContent = '-';
-            pulsarPeriodDisplay.textContent = '-';
-            surfaceGravityDisplay.textContent = '-';
-            
-            // Обновляем кнопку паузы
-            document.getElementById('pauseBtn').textContent = 'Пауза';
+            speedIncreaseDisplay.textContent = '-';
+            remnantTypeDisplay.textContent = '-';
             
             // Рисуем начальное состояние
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawBackground();
-            
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const maxRadius = Math.min(canvas.width, canvas.height) * 0.4;
-            const displayRadius = Math.min(star.diameter / 2, maxRadius);
-            
-            drawStar(centerX, centerY, displayRadius, star.color);
+            drawRotatingStar(
+                canvas.width / 2, canvas.height / 2,
+                Math.min(star.radius, canvas.width * 0.4),
+                star.color,
+                0,
+                star.flattening
+            );
         }
         
         // Инициализация
-        updateSliderValues();
+        initialMassSlider.addEventListener('input', updateSliderValues);
+        initialRadiusSlider.addEventListener('input', updateSliderValues);
+        rotationSpeedSlider.addEventListener('input', updateSliderValues);
+        collapseFactorSlider.addEventListener('input', updateSliderValues);
         
-        // Назначаем обработчики кнопок
         document.getElementById('startBtn').addEventListener('click', startSimulation);
-        document.getElementById('pauseBtn').addEventListener('click', pauseSimulation);
+        document.getElementById('pauseBtn').addEventListener('click', togglePause);
         document.getElementById('resetBtn').addEventListener('click', resetSimulation);
         
-        // Инициализируем с начальным состоянием
         resetSimulation();
     </script>
 </body>
