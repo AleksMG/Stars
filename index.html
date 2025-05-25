@@ -1,220 +1,242 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real Hugging Face Model Loader</title>
-    <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.4.2/dist/transformers.js"></script>
+    <title>Vigenère Cracker PRO</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/universal-sentence-encoder@1.3.3"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
+        body { font-family: 'Courier New', monospace; background: #0f0f0f; color: #00ffaa; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+        textarea { 
+            width: 100%; height: 150px; background: #111; color: #00ffaa; 
+            border: 1px solid #005500; padding: 10px; font-family: inherit;
         }
-        #model-selector {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        button {
+            background: #005500; color: #00ffaa; border: none; padding: 10px 15px;
+            margin: 5px; cursor: pointer; font-family: inherit;
         }
-        #chat-container {
-            background: white;
-            height: 400px;
-            overflow-y: auto;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        #output { 
+            background: #111; padding: 15px; margin-top: 20px; 
+            border: 1px solid #005500; white-space: pre-wrap;
         }
-        .message {
-            margin-bottom: 15px;
-            padding: 10px 15px;
-            border-radius: 18px;
-            max-width: 80%;
-        }
-        .user-message {
-            background: #007bff;
-            color: white;
-            margin-left: auto;
-            border-bottom-right-radius: 5px;
-        }
-        .bot-message {
-            background: #e9ecef;
-            margin-right: auto;
-            border-bottom-left-radius: 5px;
-        }
-        #input-area {
-            display: flex;
-            gap: 10px;
-        }
-        #user-input {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 20px;
-            font-size: 16px;
-        }
-        #send-button {
-            padding: 12px 20px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        #status {
-            margin-top: 10px;
-            color: #666;
-            font-style: italic;
-        }
-        .progress-bar {
-            height: 5px;
-            background: #e9ecef;
-            border-radius: 3px;
-            margin-top: 10px;
-            overflow: hidden;
-        }
-        .progress {
-            height: 100%;
-            background: #007bff;
-            width: 0%;
-            transition: width 0.3s;
-        }
+        .progress { height: 5px; background: #003300; margin: 10px 0; }
+        .progress-bar { height: 100%; background: #00ffaa; width: 0%; }
     </style>
 </head>
 <body>
-    <h1>Real Hugging Face Model Loader</h1>
-    
-    <div id="model-selector">
-        <h2>Выберите модель:</h2>
-        <select id="model-choice">
-            <option value="Xenova/distilgpt2">DistilGPT-2 (английский, 66M параметров)</option>
-            <option value="Xenova/bert-base-uncased">BERT (английский, 110M параметров)</option>
-            <option value="sberbank-ai/rugpt3small_based_on_gpt2">Rugpt3small (русский, 85M параметров)</option>
-        </select>
-        <button id="load-model-btn">Загрузить модель</button>
-        <div class="progress-bar">
-            <div class="progress" id="load-progress"></div>
+    <div class="container">
+        <h1>🔓 Vigenère Cracker PRO</h1>
+        
+        <textarea id="ciphertext" placeholder="Paste Vigenère-encrypted text here..."></textarea>
+        <button onclick="crackVigenere()">CRACK VIGENÈRE</button>
+        
+        <div class="progress" id="progress">
+            <div class="progress-bar" id="progress-bar"></div>
         </div>
-        <div id="model-status">Модель не загружена</div>
+        
+        <div id="key-info"></div>
+        <div id="output">[SYSTEM READY]</div>
     </div>
-    
-    <div id="chat-container"></div>
-    
-    <div id="input-area">
-        <input type="text" id="user-input" placeholder="Введите сообщение..." disabled>
-        <button id="send-button" disabled>Отправить</button>
-    </div>
-    
-    <div id="status">Выберите и загрузите модель для начала</div>
 
     <script>
-        // Глобальные переменные
-        let pipeline = null;
-        let selectedModel = null;
-        
-        // Элементы интерфейса
-        const modelChoice = document.getElementById('model-choice');
-        const loadModelBtn = document.getElementById('load-model-btn');
-        const loadProgress = document.getElementById('load-progress');
-        const modelStatus = document.getElementById('model-status');
-        const chatContainer = document.getElementById('chat-container');
-        const userInput = document.getElementById('user-input');
-        const sendButton = document.getElementById('send-button');
-        const status = document.getElementById('status');
-        
-        // Загрузка модели
-        loadModelBtn.addEventListener('click', async () => {
-            selectedModel = modelChoice.value;
+        // ======================
+        // CORE VIGENÈRE CRACKER
+        // ======================
+        const VigenereCracker = {
+            model: null,
             
-            try {
-                // Блокируем интерфейс во время загрузки
-                loadModelBtn.disabled = true;
-                userInput.disabled = true;
-                sendButton.disabled = true;
-                modelStatus.textContent = "Загрузка модели...";
-                status.textContent = "Пожалуйста, подождите, модель загружается (это может занять несколько минут)...";
+            async init() {
+                this.model = await use.load();
+                logOutput("[+] AI model loaded");
+            },
+            
+            // Полный цикл взлома
+            async crack(ciphertext) {
+                // 1. Определяем длину ключа (Касиски)
+                const keyLength = this.findKeyLength(ciphertext);
+                logOutput(`[+] Estimated key length: ${keyLength}`);
                 
-                // Создаем pipeline с колбэком прогресса
-                pipeline = await pipeline('text-generation', selectedModel, {
-                    quantized: true,
-                    progress_callback: (progress) => {
-                        const percent = Math.round(progress.progress * 100);
-                        loadProgress.style.width = `${percent}%`;
-                        modelStatus.textContent = `Загрузка: ${percent}%`;
-                        
-                        if (progress.progress === 1) {
-                            modelStatus.textContent = "Модель загружена!";
-                            status.textContent = "Модель готова к работе. Введите сообщение.";
-                            userInput.disabled = false;
-                            sendButton.disabled = false;
-                            userInput.focus();
-                            
-                            // Добавляем приветственное сообщение
-                            addMessage("bot", "Модель успешно загружена! Задайте ваш вопрос.");
+                // 2. Разбиваем на группы по ключу
+                const groups = this.splitIntoGroups(ciphertext, keyLength);
+                
+                // 3. Для каждой группы находим сдвиг
+                let key = '';
+                for (let i = 0; i < keyLength; i++) {
+                    updateProgress(i / keyLength * 100);
+                    const shift = this.findShift(groups[i]);
+                    key += String.fromCharCode(shift + 97);
+                    logOutput(`[+] Key char ${i+1}: ${key.charAt(i)} (shift ${shift})`);
+                }
+                
+                // 4. Дешифруем
+                const decrypted = this.decrypt(ciphertext, key);
+                
+                // 5. Верифицируем результат
+                const score = await this.evaluateText(decrypted);
+                
+                return {
+                    key: key,
+                    text: decrypted,
+                    confidence: score
+                };
+            },
+            
+            // Метод Касиски для определения длины ключа
+            findKeyLength(text) {
+                const seqs = {};
+                // Ищем повторяющиеся 3-символьные последовательности
+                for (let i = 0; i < text.length - 3; i++) {
+                    const seq = text.substr(i, 3);
+                    if (seqs[seq]) seqs[seq].push(i);
+                    else seqs[seq] = [i];
+                }
+                
+                // Вычисляем НОД расстояний между повторами
+                const distances = [];
+                for (const seq in seqs) {
+                    if (seqs[seq].length > 1) {
+                        for (let i = 1; i < seqs[seq].length; i++) {
+                            distances.push(seqs[seq][i] - seqs[seq][0]);
                         }
                     }
-                });
+                }
                 
-            } catch (error) {
-                console.error("Ошибка загрузки модели:", error);
-                modelStatus.textContent = "Ошибка загрузки модели";
-                status.textContent = `Ошибка: ${error.message}`;
-                loadModelBtn.disabled = false;
-            }
-        });
-        
-        // Отправка сообщения
-        sendButton.addEventListener('click', generateResponse);
-        userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') generateResponse();
-        });
-        
-        async function generateResponse() {
-            const message = userInput.value.trim();
-            if (!message || !pipeline) return;
+                // Наиболее вероятная длина ключа - НОД всех расстояний
+                return this.gcdArray(distances) || 3;
+            },
             
-            // Добавляем сообщение пользователя
-            addMessage("user", message);
-            userInput.value = "";
-            userInput.disabled = true;
-            sendButton.disabled = true;
-            status.textContent = "Модель генерирует ответ...";
+            // Нахождение НОД массива чисел
+            gcdArray(arr) {
+                if (arr.length === 0) return 0;
+                let result = arr[0];
+                for (let i = 1; i < arr.length; i++) {
+                    result = this.gcd(result, arr[i]);
+                    if (result === 1) return 1;
+                }
+                return result;
+            },
+            
+            gcd(a, b) {
+                return b ? this.gcd(b, a % b) : a;
+            },
+            
+            // Разбиение текста на группы
+            splitIntoGroups(text, keyLength) {
+                const groups = Array(keyLength).fill().map(() => []);
+                for (let i = 0; i < text.length; i++) {
+                    if (/[a-z]/i.test(text[i])) {
+                        groups[i % keyLength].push(text[i].toLowerCase());
+                    }
+                }
+                return groups;
+            },
+            
+            // Определение сдвига для группы
+            findShift(group) {
+                const freq = this.analyzeFrequency(group.join(''));
+                const englishFreq = [8.2, 1.5, 2.8, 4.3, 12.7, 2.2, 2.0, 6.1, 7.0, 0.2, 0.8, 4.0, 2.4, 6.7, 7.5, 1.9, 0.1, 6.0, 6.3, 9.1, 2.8, 1.0, 2.4, 0.2, 2.0, 0.1];
+                
+                let bestShift = 0;
+                let bestScore = 0;
+                
+                for (let shift = 0; shift < 26; shift++) {
+                    let score = 0;
+                    for (const char in freq) {
+                        const index = (char.charCodeAt(0) - 97 - shift + 26) % 26;
+                        score += freq[char] * englishFreq[index];
+                    }
+                    
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestShift = shift;
+                    }
+                }
+                
+                return bestShift;
+            },
+            
+            // Анализ частот символов
+            analyzeFrequency(text) {
+                const freq = {};
+                for (const char of text.toLowerCase()) {
+                    if (/[a-z]/.test(char)) {
+                        freq[char] = (freq[char] || 0) + 1;
+                    }
+                }
+                return freq;
+            },
+            
+            // Дешифровка с известным ключом
+            decrypt(text, key) {
+                let result = '';
+                key = key.toLowerCase();
+                let keyIndex = 0;
+                
+                for (let i = 0; i < text.length; i++) {
+                    const char = text[i];
+                    if (/[a-z]/i.test(char)) {
+                        const shift = key.charCodeAt(keyIndex % key.length) - 97;
+                        result += this.caesarDecrypt(char, shift);
+                        keyIndex++;
+                    } else {
+                        result += char;
+                    }
+                }
+                
+                return result;
+            },
+            
+            caesarDecrypt(char, shift) {
+                const code = char.charCodeAt(0);
+                const shiftAmount = code >= 97 ? 97 : 65;
+                return String.fromCharCode(((code - shiftAmount - shift + 26) % 26) + shiftAmount);
+            },
+            
+            // Оценка текста ИИ
+            async evaluateText(text) {
+                const embedding = await this.model.embed(text);
+                const scores = await tf.tensor([1, 0]).dot(embedding).array();
+                return scores[0];
+            }
+        };
+        
+        // ======================
+        // UI FUNCTIONS
+        // ======================
+        function logOutput(msg) {
+            document.getElementById('output').textContent += '\n' + msg;
+        }
+        
+        function updateProgress(percent) {
+            document.getElementById('progress-bar').style.width = percent + '%';
+        }
+        
+        async function crackVigenere() {
+            const text = document.getElementById('ciphertext').value;
+            if (!text) return alert("Enter ciphertext!");
+            
+            document.getElementById('output').textContent = "[CRACKING...]";
+            document.getElementById('progress').style.display = 'block';
             
             try {
-                // Генерация ответа
-                const response = await pipeline(message, {
-                    max_new_tokens: 100,
-                    temperature: 0.7,
-                    do_sample: true,
-                });
+                const result = await VigenereCracker.crack(text);
                 
-                // Добавляем ответ бота
-                addMessage("bot", response[0].generated_text);
-                status.textContent = "Готово";
+                document.getElementById('key-info').innerHTML = `
+                    <h3>Found Key: <span style="color:#ffff00">${result.key}</span></h3>
+                    <p>Confidence: ${(result.confidence * 100).toFixed(1)}%</p>
+                `;
                 
+                logOutput("\n[+] DECRYPTED TEXT:");
+                logOutput(result.text);
             } catch (error) {
-                console.error("Ошибка генерации:", error);
-                addMessage("bot", `Ошибка: ${error.message}`);
-                status.textContent = "Ошибка генерации ответа";
+                logOutput("\n[ERROR] " + error.message);
             }
-            
-            userInput.disabled = false;
-            sendButton.disabled = false;
-            userInput.focus();
         }
         
-        function addMessage(sender, text) {
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message', `${sender}-message`);
-            messageDiv.textContent = text;
-            chatContainer.appendChild(messageDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
+        // Initialize
+        window.onload = async () => {
+            await VigenereCracker.init();
+        };
     </script>
 </body>
 </html>
