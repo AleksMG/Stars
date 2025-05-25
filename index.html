@@ -3,502 +3,383 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Корректная симуляция вращения звезды</title>
+    <title>Улучшенный мини-ИИ</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #0f0f1a;
-            color: #fff;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
-        }
-        .controls {
-            flex: 1;
-            min-width: 300px;
-            background: #1a1a2e;
             padding: 20px;
-            border-radius: 15px;
         }
-        .simulation {
-            flex: 2;
-            min-width: 500px;
-            height: 600px;
-            background: #000;
-            border-radius: 15px;
-            position: relative;
-            overflow: hidden;
-        }
-        canvas {
-            width: 100%;
-            height: 100%;
-        }
-        h1 {
-            color: #4fc3f7;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .control-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #4fc3f7;
-            font-weight: bold;
-        }
-        input[type="range"] {
-            width: 100%;
-            height: 10px;
-            background: #333;
+        #chat-container {
+            border: 1px solid #ccc;
             border-radius: 5px;
-            outline: none;
+            height: 500px;
+            overflow-y: auto;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #f9f9f9;
         }
-        .value-display {
+        .user-message {
+            text-align: right;
+            background-color: #d4edff;
+            padding: 8px 12px;
+            margin: 8px 0;
+            border-radius: 18px 18px 0 18px;
             display: inline-block;
-            margin-top: 5px;
-            padding: 3px 8px;
-            background: rgba(79,195,247,0.2);
-            border-radius: 5px;
-            font-family: monospace;
+            max-width: 70%;
+            float: right;
+            clear: both;
         }
-        button {
-            background: #4fc3f7;
+        .bot-message {
+            text-align: left;
+            background-color: #f0f0f0;
+            padding: 8px 12px;
+            margin: 8px 0;
+            border-radius: 18px 18px 18px 0;
+            display: inline-block;
+            max-width: 70%;
+            float: left;
+            clear: both;
+        }
+        #input-area {
+            display: flex;
+            gap: 10px;
+        }
+        #user-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            font-size: 16px;
+        }
+        #send-button {
+            padding: 12px 20px;
+            background-color: #4CAF50;
             color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
+            border-radius: 20px;
             cursor: pointer;
             font-size: 16px;
-            margin: 10px 5px 0 0;
         }
-        .info-panel {
-            margin-top: 20px;
-            padding: 15px;
-            background: rgba(26,35,46,0.7);
-            border-radius: 10px;
-            border-left: 4px solid #4fc3f7;
+        #send-button:hover {
+            background-color: #45a049;
         }
-        .rotation-visual {
-            margin-top: 20px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0,0,0,0.3);
-            border-radius: 8px;
-            position: relative;
-        }
-        .rotation-ball {
-            width: 30px;
-            height: 30px;
-            background: #4fc3f7;
-            border-radius: 50%;
-            position: absolute;
-            left: 5px;
+        .typing-indicator {
+            color: #888;
+            font-style: italic;
         }
     </style>
 </head>
 <body>
-    <h1>★ Корректная симуляция вращения звезды ★</h1>
+    <h1>Улучшенный мини-ИИ</h1>
+    <p>Попробуйте поговорить с ним как с человеком. Он запоминает контекст и может обучаться.</p>
     
-    <div class="container">
-        <div class="controls">
-            <div class="control-group">
-                <label for="initialMass">Масса звезды (M☉): <span class="value-display" id="initialMassValue">6.4</span></label>
-                <input type="range" id="initialMass" min="0.1" max="30" step="0.1" value="6.4">
-            </div>
-            
-            <div class="control-group">
-                <label for="initialRadius">Радиус (R☉): <span class="value-display" id="initialRadiusValue">20</span></label>
-                <input type="range" id="initialRadius" min="0.1" max="50" step="0.1" value="20">
-            </div>
-            
-            <div class="control-group">
-                <label for="rotationSpeed">Вращение (об/день): <span class="value-display" id="rotationSpeedValue">160.02</span></label>
-                <input type="range" id="rotationSpeed" min="0.01" max="1000" step="0.01" value="160.02">
-                <div class="rotation-visual">
-                    <div class="rotation-ball" id="rotationBall"></div>
-                </div>
-            </div>
-            
-            <div class="control-group">
-                <label for="collapseFactor">Степень коллапса: <span class="value-display" id="collapseFactorValue">100000x</span></label>
-                <input type="range" id="collapseFactor" min="100" max="1000000" step="100" value="100000">
-            </div>
-            
-            <button id="startBtn">▶ Запуск</button>
-            <button id="pauseBtn">⏸ Пауза</button>
-            <button id="resetBtn">⏹ Сброс</button>
-            
-            <div class="info-panel">
-                <div><strong>Текущая скорость:</strong> <span id="currentRotation">160.02 об/день</span></div>
-                <div><strong>Финальная скорость:</strong> <span id="finalRotation">-</span></div>
-                <div><strong>Увеличение скорости:</strong> <span id="speedIncrease">-</span></div>
-                <div><strong>Тип остатка:</strong> <span id="remnantType">-</span></div>
-            </div>
-        </div>
-        
-        <div class="simulation">
-            <canvas id="starCanvas"></canvas>
-        </div>
+    <div id="chat-container"></div>
+    
+    <div id="input-area">
+        <input type="text" id="user-input" placeholder="Введите сообщение..." autofocus>
+        <button id="send-button" onclick="sendMessage()">Отправить</button>
     </div>
 
     <script>
-        // Физические константы
-        const SOLAR_MASS = 1.989e30;
-        const SOLAR_RADIUS = 695700;
-        const G = 6.67430e-11;
-        const DAY_SECONDS = 86400;
-        const C = 299792458;
-
-        // Настройка canvas
-        const canvas = document.getElementById('starCanvas');
-        const ctx = canvas.getContext('2d');
-        
-        function resizeCanvas() {
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        // Элементы управления
-        const initialMassSlider = document.getElementById('initialMass');
-        const initialRadiusSlider = document.getElementById('initialRadius');
-        const rotationSpeedSlider = document.getElementById('rotationSpeed');
-        const collapseFactorSlider = document.getElementById('collapseFactor');
-        
-        const initialMassValue = document.getElementById('initialMassValue');
-        const initialRadiusValue = document.getElementById('initialRadiusValue');
-        const rotationSpeedValue = document.getElementById('rotationSpeedValue');
-        const collapseFactorValue = document.getElementById('collapseFactorValue');
-        const rotationBall = document.getElementById('rotationBall');
-        
-        const currentRotationDisplay = document.getElementById('currentRotation');
-        const finalRotationDisplay = document.getElementById('finalRotation');
-        const speedIncreaseDisplay = document.getElementById('speedIncrease');
-        const remnantTypeDisplay = document.getElementById('remnantType');
-
-        // Параметры симуляции
-        let animationId = null;
-        let simulationTime = 0;
-        let isSimulating = false;
-        let isPaused = false;
-
-        // Звезда
-        let star = {
-            mass: 6.4,
-            radius: 20,
-            rotationSpeed: 160.02,
-            angularVelocity: 0,
-            color: [255, 200, 100],
-            flattening: 0
+        // Расширенная база знаний с вариантами ответов
+        const knowledgeBase = {
+            "привет": [
+                "Привет! Как ваши дела?",
+                "Здравствуйте! Рад вас видеть.",
+                "Приветствую! Чем могу помочь?"
+            ],
+            "как дела": [
+                "У меня всё отлично! А у вас?",
+                "Как у цифровой сущности может быть - прекрасно! А вы как?",
+                "Работаю в штатном режиме. Спасибо, что спросили!"
+            ],
+            "что ты умеешь": [
+                "Я могу поддерживать беседу, запоминать контекст и даже немного обучаться!",
+                "Я простой ИИ, но умею анализировать вопросы и подбирать подходящие ответы.",
+                "Пока мои возможности ограничены, но я стараюсь улучшаться!"
+            ],
+            "пока": [
+                "До свидания! Буду ждать вашего возвращения.",
+                "Пока! Приходите ещё пообщаться.",
+                "Всего хорошего! Возвращайтесь с новыми вопросами."
+            ]
         };
 
-        // Остаток
-        let remnant = {
-            radius: 0,
-            rotationSpeed: 0,
-            angularVelocity: 0,
-            color: [100, 150, 255],
-            type: ''
+        // Контекст разговора
+        let conversationContext = {
+            userName: null,
+            lastQuestion: null,
+            mood: 'neutral',
+            learnedResponses: {}
         };
 
-        // Обновление значений
-        function updateSliderValues() {
-            initialMassValue.textContent = initialMassSlider.value;
-            initialRadiusValue.textContent = initialRadiusSlider.value;
-            rotationSpeedValue.textContent = rotationSpeedSlider.value;
-            collapseFactorValue.textContent = collapseFactorSlider.value + 'x';
+        // История сообщений
+        let messageHistory = [];
+
+        // Функция для вычисления схожести строк
+        function stringSimilarity(str1, str2) {
+            const len = Math.max(str1.length, str2.length);
+            if (len === 0) return 1.0;
             
-            // Анимация шарика вращения
-            const speed = parseFloat(rotationSpeedSlider.value);
-            const duration = Math.max(100, 5000 / Math.sqrt(speed));
-            rotationBall.style.transition = `left ${duration}ms linear`;
-            const percent = Math.min(1, speed / 1000);
-            rotationBall.style.left = `${5 + percent * 90}%`;
+            const distance = levenshteinDistance(str1, str2);
+            return (len - distance) / len;
         }
 
-        // Применение значений
-        function applySliderValues() {
-            star.mass = parseFloat(initialMassSlider.value);
-            star.radius = parseFloat(initialRadiusSlider.value);
-            star.rotationSpeed = parseFloat(rotationSpeedSlider.value);
-            star.angularVelocity = star.rotationSpeed * 2 * Math.PI / DAY_SECONDS;
-            star.flattening = Math.min(0.4, star.rotationSpeed * 0.001);
-            
-            currentRotationDisplay.textContent = star.rotationSpeed.toFixed(2) + ' об/день';
-        }
-
-        // Определение типа остатка (физически корректное)
-        function determineRemnantType(mass) {
-            if (mass < 8) return 'Белый карлик';
-            if (mass < 25) return 'Нейтронная звезда';
-            return 'Черная дыра';
-        }
-
-        // Расчет параметров остатка
-        function calculateRemnant() {
-            const collapseFactor = parseFloat(collapseFactorSlider.value);
-            remnant.radius = star.radius / collapseFactor;
-            
-            // Сохранение момента импульса
-            remnant.angularVelocity = star.angularVelocity * Math.pow(star.radius / remnant.radius, 2);
-            remnant.rotationSpeed = remnant.angularVelocity * DAY_SECONDS / (2 * Math.PI);
-            
-            // Физические ограничения для нейтронных звезд
-            if (remnant.rotationSpeed > 1000 * DAY_SECONDS && determineRemnantType(star.mass) === 'Нейтронная звезда') {
-                remnant.rotationSpeed = 1000 * DAY_SECONDS;
-                remnant.angularVelocity = remnant.rotationSpeed * 2 * Math.PI / DAY_SECONDS;
+        // Алгоритм Левенштейна для вычисления расстояния между строками
+        function levenshteinDistance(a, b) {
+            const matrix = [];
+            for (let i = 0; i <= b.length; i++) {
+                matrix[i] = [i];
             }
-            
-            remnant.type = determineRemnantType(star.mass);
-            
-            // Корректировка для массы <8 M☉ (никаких черных дыр!)
-            if (star.mass < 8) remnant.type = 'Белый карлик';
-            
-            // Цвета остатков
-            if (remnant.type === 'Белый карлик') {
-                remnant.color = [200, 220, 255];
-            } else if (remnant.type === 'Нейтронная звезда') {
-                remnant.color = [100, 150, 255];
-            } else {
-                remnant.color = [50, 50, 80];
+            for (let j = 0; j <= a.length; j++) {
+                matrix[0][j] = j;
             }
-            
-            // Обновление информации
-            finalRotationDisplay.textContent = remnant.rotationSpeed.toExponential(2) + ' об/день';
-            speedIncreaseDisplay.textContent = (remnant.rotationSpeed / star.rotationSpeed).toExponential(2) + 'x';
-            remnantTypeDisplay.textContent = remnant.type;
-        }
-
-        // Рисование вращающейся звезды
-        function drawRotatingStar(x, y, radius, color, rotationAngle, flattening = 0, isRemnant = false) {
-            ctx.save();
-            ctx.translate(x, y);
-            ctx.rotate(rotationAngle);
-            
-            // Эллипс с учетом уплощения
-            const verticalRadius = radius * (1 - flattening);
-            
-            // Градиент
-            const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
-            gradient.addColorStop(0, `rgba(${color[0]}, ${color[1]}, ${color[2]}, 1)`);
-            gradient.addColorStop(1, `rgba(${color[0]*0.5}, ${color[1]*0.5}, ${color[2]*0.5}, 1)`);
-            
-            // Рисуем эллипс
-            ctx.beginPath();
-            ctx.ellipse(0, 0, radius, verticalRadius, 0, 0, Math.PI * 2);
-            ctx.fillStyle = gradient;
-            ctx.fill();
-            
-            // Для нейтронной звезды добавляем пучки излучения
-            if (isRemnant && remnant.type === 'Нейтронная звезда') {
-                const pulseIntensity = 0.7 + 0.3 * Math.sin(simulationTime * 10);
-                
-                ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.lineTo(radius * 5, -radius * 0.7);
-                ctx.lineTo(radius * 5, radius * 0.7);
-                ctx.closePath();
-                ctx.fillStyle = `rgba(255, 255, 255, ${pulseIntensity})`;
-                ctx.fill();
-                
-                ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.lineTo(-radius * 5, -radius * 0.7);
-                ctx.lineTo(-radius * 5, radius * 0.7);
-                ctx.closePath();
-                ctx.fillStyle = `rgba(255, 255, 255, ${pulseIntensity})`;
-                ctx.fill();
-            }
-            
-            ctx.restore();
-        }
-
-        // Рисование фона
-        function drawBackground() {
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Звезды
-            for (let i = 0; i < 200; i++) {
-                const x = Math.random() * canvas.width;
-                const y = Math.random() * canvas.height;
-                const size = Math.random() * 2;
-                const brightness = Math.random() * 200 + 55;
-                
-                ctx.beginPath();
-                ctx.arc(x, y, size, 0, Math.PI * 2);
-                ctx.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness})`;
-                ctx.fill();
-            }
-        }
-
-        // Анимация
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawBackground();
-            
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const maxRadius = Math.min(canvas.width, canvas.height) * 0.4;
-            
-            // Прогресс анимации
-            const animationDuration = 5;
-            const progress = Math.min(simulationTime / animationDuration, 1);
-            
-            // Интерполяция параметров
-            let currentRadius, currentColor, currentFlattening, rotationAngle;
-            let isRemnant = false;
-            
-            if (progress < 0.3) {
-                // До коллапса
-                currentRadius = star.radius;
-                currentColor = star.color;
-                currentFlattening = star.flattening;
-                rotationAngle = star.angularVelocity * simulationTime;
-                currentRotationDisplay.textContent = star.rotationSpeed.toFixed(2) + ' об/день';
-            } else if (progress < 0.8) {
-                // Коллапс
-                const phaseProgress = (progress - 0.3) / 0.5;
-                currentRadius = star.radius * (1 - phaseProgress) + remnant.radius * phaseProgress;
-                currentColor = [
-                    star.color[0] * (1 - phaseProgress) + remnant.color[0] * phaseProgress,
-                    star.color[1] * (1 - phaseProgress) + remnant.color[1] * phaseProgress,
-                    star.color[2] * (1 - phaseProgress) + remnant.color[2] * phaseProgress
-                ];
-                currentFlattening = star.flattening * (1 - phaseProgress);
-                
-                const currentAngularVelocity = star.angularVelocity * (1 - phaseProgress) + 
-                                             remnant.angularVelocity * phaseProgress;
-                rotationAngle = star.angularVelocity * 0.3 * animationDuration + 
-                               currentAngularVelocity * (simulationTime - 0.3 * animationDuration);
-                
-                currentRotationDisplay.textContent = (currentAngularVelocity * DAY_SECONDS / (2 * Math.PI)).toExponential(2) + ' об/день';
-                
-                // Вспышка
-                if (phaseProgress > 0.4 && phaseProgress < 0.6) {
-                    ctx.beginPath();
-                    ctx.arc(centerX, centerY, currentRadius * 10, 0, Math.PI * 2);
-                    const gradient = ctx.createRadialGradient(
-                        centerX, centerY, currentRadius,
-                        centerX, centerY, currentRadius * 10
-                    );
-                    gradient.addColorStop(0, `rgba(255, 255, 255, 0.7)`);
-                    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-                    ctx.fillStyle = gradient;
-                    ctx.fill();
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    if (b.charAt(i-1) === a.charAt(j-1)) {
+                        matrix[i][j] = matrix[i-1][j-1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i-1][j-1] + 1,
+                            matrix[i][j-1] + 1,
+                            matrix[i-1][j] + 1
+                        );
+                    }
                 }
-            } else {
-                // После коллапса
-                currentRadius = remnant.radius;
-                currentColor = remnant.color;
-                currentFlattening = 0;
-                rotationAngle = star.angularVelocity * 0.3 * animationDuration + 
-                              remnant.angularVelocity * (simulationTime - 0.3 * animationDuration);
-                isRemnant = true;
-                currentRotationDisplay.textContent = remnant.rotationSpeed.toExponential(2) + ' об/день';
-                
-                // Пульсар
-                if (remnant.type === 'Нейтронная звезда') {
-                    const pulse = 0.7 + 0.3 * Math.sin(simulationTime * 10);
-                    currentColor = [
-                        currentColor[0] * pulse,
-                        currentColor[1] * pulse,
-                        currentColor[2] * pulse
-                    ];
+            }
+            return matrix[b.length][a.length];
+        }
+
+        // Найти наиболее похожий вопрос в базе знаний
+        function findMostSimilarQuestion(question) {
+            let maxSimilarity = 0;
+            let bestMatch = null;
+            
+            // Проверяем выученные ответы
+            for (const learnedQuestion in conversationContext.learnedResponses) {
+                const similarity = stringSimilarity(question, learnedQuestion);
+                if (similarity > maxSimilarity && similarity > 0.6) {
+                    maxSimilarity = similarity;
+                    bestMatch = learnedQuestion;
                 }
             }
             
-            // Рисуем звезду
-            drawRotatingStar(
-                centerX, centerY,
-                Math.min(currentRadius, maxRadius),
-                currentColor,
-                rotationAngle,
-                currentFlattening,
-                isRemnant
-            );
+            // Проверяем базовые знания
+            for (const baseQuestion in knowledgeBase) {
+                const similarity = stringSimilarity(question, baseQuestion);
+                if (similarity > maxSimilarity && similarity > 0.6) {
+                    maxSimilarity = similarity;
+                    bestMatch = baseQuestion;
+                }
+            }
             
-            // Обновление времени
-            if (isSimulating && !isPaused && progress < 1) {
-                simulationTime += 1/60;
-                animationId = requestAnimationFrame(animate);
-            } else if (progress >= 1) {
-                isSimulating = false;
+            return { question: bestMatch, similarity: maxSimilarity };
+        }
+
+        // Генерация ответа с учетом контекста
+        function generateResponse(userMessage) {
+            // Сохраняем последний вопрос для контекста
+            conversationContext.lastQuestion = userMessage;
+            
+            // Приводим сообщение к нижнему регистру для сравнения
+            const lowerMessage = userMessage.toLowerCase();
+            
+            // Анализируем сообщение на специальные команды
+            if (lowerMessage.includes('зовут') && !lowerMessage.includes('тебя')) {
+                const name = userMessage.replace(/.*зовут\s*/i, '').trim();
+                if (name) {
+                    conversationContext.userName = name;
+                    return `Приятно познакомиться, ${name}! Я запомнил ваше имя.`;
+                }
+            }
+            
+            // Если бот узнал имя пользователя, используем его
+            if (conversationContext.userName && Math.random() > 0.7) {
+                const name = conversationContext.userName;
+                if (lowerMessage.includes('как дела')) {
+                    return `${name}, у меня всё хорошо! Спасибо, что интересуетесь!`;
+                }
+                if (lowerMessage.includes('привет')) {
+                    return `Привет, ${name}! Рад вас снова видеть!`;
+                }
+            }
+            
+            // Пытаемся найти похожий вопрос
+            const { question: similarQuestion, similarity } = findMostSimilarQuestion(lowerMessage);
+            
+            // Если нашли достаточно похожий вопрос
+            if (similarQuestion && similarity > 0.7) {
+                // Проверяем выученные ответы
+                if (conversationContext.learnedResponses[similarQuestion]) {
+                    const possibleAnswers = conversationContext.learnedResponses[similarQuestion];
+                    return possibleAnswers[Math.floor(Math.random() * possibleAnswers.length)];
+                }
+                
+                // Используем базовые знания
+                if (knowledgeBase[similarQuestion]) {
+                    const possibleAnswers = knowledgeBase[similarQuestion];
+                    return possibleAnswers[Math.floor(Math.random() * possibleAnswers.length)];
+                }
+            }
+            
+            // Если это похоже на вопрос, но ответа нет
+            if (lowerMessage.includes('?') || 
+                lowerMessage.startsWith('кто') || 
+                lowerMessage.startsWith('что') || 
+                lowerMessage.startsWith('как') || 
+                lowerMessage.startsWith('почему')) {
+                
+                // Добавляем в историю для возможного обучения
+                messageHistory.push({
+                    question: userMessage,
+                    timestamp: new Date()
+                });
+                
+                return "Интересный вопрос! Я пока не знаю на него ответа. Можете научить меня? Напишите ответ, который я должен запомнить, в формате: \"Запомни: [ответ]\"";
+            }
+            
+            // Ответ по умолчанию
+            const defaultResponses = [
+                "Понятно. Можете рассказать подробнее?",
+                "Интересно. Что вы ещё хотели бы обсудить?",
+                "Я вас слушаю. Продолжайте, пожалуйста.",
+                "Хорошо. Есть что-то конкретное, что вас интересует?"
+            ];
+            
+            return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+        }
+
+        // Обработка команд обучения
+        function processLearningCommand(userMessage) {
+            const learnMatch = userMessage.match(/запомни:\s*(.+)/i);
+            if (learnMatch && conversationContext.lastQuestion) {
+                const answer = learnMatch[1].trim();
+                const question = conversationContext.lastQuestion.toLowerCase();
+                
+                if (!conversationContext.learnedResponses[question]) {
+                    conversationContext.learnedResponses[question] = [];
+                }
+                
+                conversationContext.learnedResponses[question].push(answer);
+                
+                // Сохраняем в localStorage
+                localStorage.setItem('aiLearnedResponses', JSON.stringify(conversationContext.learnedResponses));
+                
+                return `Спасибо! Я запомнил, что на вопрос "${conversationContext.lastQuestion}" нужно отвечать: "${answer}"`;
+            }
+            
+            return null;
+        }
+
+        // Отправка сообщения
+        function sendMessage() {
+            const userInput = document.getElementById('user-input');
+            const message = userInput.value.trim();
+            userInput.value = '';
+            
+            if (message === '') return;
+            
+            // Добавляем сообщение пользователя в чат
+            addMessageToChat(message, 'user');
+            
+            // Показываем индикатор набора сообщения
+            const typingIndicator = addTypingIndicator();
+            
+            // Имитируем задержку обработки
+            setTimeout(() => {
+                // Удаляем индикатор набора
+                removeTypingIndicator(typingIndicator);
+                
+                // Проверяем команду обучения
+                const learningResponse = processLearningCommand(message);
+                if (learningResponse) {
+                    addMessageToChat(learningResponse, 'bot');
+                    return;
+                }
+                
+                // Генерируем ответ
+                const response = generateResponse(message);
+                addMessageToChat(response, 'bot');
+                
+                // Прокручиваем чат вниз
+                scrollChatToBottom();
+            }, 1000 + Math.random() * 2000); // Случайная задержка 1-3 секунды
+        }
+
+        // Добавление сообщения в чат
+        function addMessageToChat(text, sender) {
+            const chatContainer = document.getElementById('chat-container');
+            const messageElement = document.createElement('div');
+            
+            messageElement.classList.add(sender + '-message');
+            messageElement.textContent = text;
+            
+            chatContainer.appendChild(messageElement);
+            scrollChatToBottom();
+            
+            // Сохраняем в историю
+            if (sender === 'user') {
+                messageHistory.push({
+                    text: text,
+                    sender: sender,
+                    timestamp: new Date()
+                });
             }
         }
 
-        // Запуск симуляции
-        function startSimulation() {
-            if (isSimulating) return;
+        // Добавление индикатора набора сообщения
+        function addTypingIndicator() {
+            const chatContainer = document.getElementById('chat-container');
+            const indicator = document.createElement('div');
             
-            applySliderValues();
-            calculateRemnant();
+            indicator.classList.add('bot-message', 'typing-indicator');
+            indicator.id = 'typing-indicator';
+            indicator.textContent = 'ИИ печатает...';
             
-            simulationTime = 0;
-            isSimulating = true;
-            isPaused = false;
-            animate();
+            chatContainer.appendChild(indicator);
+            scrollChatToBottom();
+            
+            return indicator;
         }
 
-        // Пауза
-        function togglePause() {
-            isPaused = !isPaused;
-            document.getElementById('pauseBtn').textContent = isPaused ? '▶ Продолжить' : '⏸ Пауза';
-            
-            if (isSimulating && !isPaused) {
-                animate();
+        // Удаление индикатора набора сообщения
+        function removeTypingIndicator(indicator) {
+            if (indicator && indicator.parentNode) {
+                indicator.parentNode.removeChild(indicator);
             }
         }
 
-        // Сброс
-        function resetSimulation() {
-            isSimulating = false;
-            isPaused = false;
-            if (animationId) {
-                cancelAnimationFrame(animationId);
-                animationId = null;
-            }
-            
-            applySliderValues();
-            
-            // Сброс отображения
-            finalRotationDisplay.textContent = '-';
-            speedIncreaseDisplay.textContent = '-';
-            remnantTypeDisplay.textContent = '-';
-            
-            // Рисуем начальное состояние
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawBackground();
-            drawRotatingStar(
-                canvas.width / 2, canvas.height / 2,
-                Math.min(star.radius, canvas.width * 0.4),
-                star.color,
-                0,
-                star.flattening
-            );
+        // Прокрутка чата вниз
+        function scrollChatToBottom() {
+            const chatContainer = document.getElementById('chat-container');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
-        // Инициализация
-        initialMassSlider.addEventListener('input', updateSliderValues);
-        initialRadiusSlider.addEventListener('input', updateSliderValues);
-        rotationSpeedSlider.addEventListener('input', updateSliderValues);
-        collapseFactorSlider.addEventListener('input', updateSliderValues);
-        
-        document.getElementById('startBtn').addEventListener('click', startSimulation);
-        document.getElementById('pauseBtn').addEventListener('click', togglePause);
-        document.getElementById('resetBtn').addEventListener('click', resetSimulation);
-        
-        resetSimulation();
+        // Загрузка выученных ответов из localStorage
+        function loadLearnedResponses() {
+            const savedResponses = localStorage.getItem('aiLearnedResponses');
+            if (savedResponses) {
+                conversationContext.learnedResponses = JSON.parse(savedResponses);
+            }
+        }
+
+        // Обработка нажатия Enter
+        document.getElementById('user-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Приветственное сообщение
+        window.onload = function() {
+            loadLearnedResponses();
+            
+            setTimeout(() => {
+                addMessageToChat("Привет! Я улучшенный мини-ИИ. Я могу поддерживать беседу, запоминать контекст и даже обучаться на ваших ответах. Давайте пообщаемся!", 'bot');
+            }, 500);
+        };
     </script>
 </body>
 </html>
