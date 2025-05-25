@@ -3,44 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Улучшенный мини-ИИ</title>
+    <title>Real Hugging Face Model Loader</title>
+    <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.4.2/dist/transformers.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
+            background-color: #f5f5f5;
+        }
+        #model-selector {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         #chat-container {
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            height: 500px;
+            background: white;
+            height: 400px;
             overflow-y: auto;
-            padding: 15px;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .message {
             margin-bottom: 15px;
-            background: #f9f9f9;
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 80%;
         }
         .user-message {
-            text-align: right;
-            background-color: #d4edff;
-            padding: 8px 12px;
-            margin: 8px 0;
-            border-radius: 18px 18px 0 18px;
-            display: inline-block;
-            max-width: 70%;
-            float: right;
-            clear: both;
+            background: #007bff;
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
         }
         .bot-message {
-            text-align: left;
-            background-color: #f0f0f0;
-            padding: 8px 12px;
-            margin: 8px 0;
-            border-radius: 18px 18px 18px 0;
-            display: inline-block;
-            max-width: 70%;
-            float: left;
-            clear: both;
+            background: #e9ecef;
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
         }
         #input-area {
             display: flex;
@@ -49,337 +53,168 @@
         #user-input {
             flex: 1;
             padding: 12px;
-            border: 1px solid #ccc;
+            border: 1px solid #ddd;
             border-radius: 20px;
             font-size: 16px;
         }
         #send-button {
             padding: 12px 20px;
-            background-color: #4CAF50;
+            background: #007bff;
             color: white;
             border: none;
             border-radius: 20px;
             cursor: pointer;
             font-size: 16px;
         }
-        #send-button:hover {
-            background-color: #45a049;
-        }
-        .typing-indicator {
-            color: #888;
+        #status {
+            margin-top: 10px;
+            color: #666;
             font-style: italic;
+        }
+        .progress-bar {
+            height: 5px;
+            background: #e9ecef;
+            border-radius: 3px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: #007bff;
+            width: 0%;
+            transition: width 0.3s;
         }
     </style>
 </head>
 <body>
-    <h1>Улучшенный мини-ИИ</h1>
-    <p>Попробуйте поговорить с ним как с человеком. Он запоминает контекст и может обучаться.</p>
+    <h1>Real Hugging Face Model Loader</h1>
+    
+    <div id="model-selector">
+        <h2>Выберите модель:</h2>
+        <select id="model-choice">
+            <option value="Xenova/distilgpt2">DistilGPT-2 (английский, 66M параметров)</option>
+            <option value="Xenova/bert-base-uncased">BERT (английский, 110M параметров)</option>
+            <option value="sberbank-ai/rugpt3small_based_on_gpt2">Rugpt3small (русский, 85M параметров)</option>
+        </select>
+        <button id="load-model-btn">Загрузить модель</button>
+        <div class="progress-bar">
+            <div class="progress" id="load-progress"></div>
+        </div>
+        <div id="model-status">Модель не загружена</div>
+    </div>
     
     <div id="chat-container"></div>
     
     <div id="input-area">
-        <input type="text" id="user-input" placeholder="Введите сообщение..." autofocus>
-        <button id="send-button" onclick="sendMessage()">Отправить</button>
+        <input type="text" id="user-input" placeholder="Введите сообщение..." disabled>
+        <button id="send-button" disabled>Отправить</button>
     </div>
+    
+    <div id="status">Выберите и загрузите модель для начала</div>
 
     <script>
-        // Расширенная база знаний с вариантами ответов
-        const knowledgeBase = {
-            "привет": [
-                "Привет! Как ваши дела?",
-                "Здравствуйте! Рад вас видеть.",
-                "Приветствую! Чем могу помочь?"
-            ],
-            "как дела": [
-                "У меня всё отлично! А у вас?",
-                "Как у цифровой сущности может быть - прекрасно! А вы как?",
-                "Работаю в штатном режиме. Спасибо, что спросили!"
-            ],
-            "что ты умеешь": [
-                "Я могу поддерживать беседу, запоминать контекст и даже немного обучаться!",
-                "Я простой ИИ, но умею анализировать вопросы и подбирать подходящие ответы.",
-                "Пока мои возможности ограничены, но я стараюсь улучшаться!"
-            ],
-            "пока": [
-                "До свидания! Буду ждать вашего возвращения.",
-                "Пока! Приходите ещё пообщаться.",
-                "Всего хорошего! Возвращайтесь с новыми вопросами."
-            ]
-        };
-
-        // Контекст разговора
-        let conversationContext = {
-            userName: null,
-            lastQuestion: null,
-            mood: 'neutral',
-            learnedResponses: {}
-        };
-
-        // История сообщений
-        let messageHistory = [];
-
-        // Функция для вычисления схожести строк
-        function stringSimilarity(str1, str2) {
-            const len = Math.max(str1.length, str2.length);
-            if (len === 0) return 1.0;
+        // Глобальные переменные
+        let pipeline = null;
+        let selectedModel = null;
+        
+        // Элементы интерфейса
+        const modelChoice = document.getElementById('model-choice');
+        const loadModelBtn = document.getElementById('load-model-btn');
+        const loadProgress = document.getElementById('load-progress');
+        const modelStatus = document.getElementById('model-status');
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const status = document.getElementById('status');
+        
+        // Загрузка модели
+        loadModelBtn.addEventListener('click', async () => {
+            selectedModel = modelChoice.value;
             
-            const distance = levenshteinDistance(str1, str2);
-            return (len - distance) / len;
-        }
-
-        // Алгоритм Левенштейна для вычисления расстояния между строками
-        function levenshteinDistance(a, b) {
-            const matrix = [];
-            for (let i = 0; i <= b.length; i++) {
-                matrix[i] = [i];
-            }
-            for (let j = 0; j <= a.length; j++) {
-                matrix[0][j] = j;
-            }
-            for (let i = 1; i <= b.length; i++) {
-                for (let j = 1; j <= a.length; j++) {
-                    if (b.charAt(i-1) === a.charAt(j-1)) {
-                        matrix[i][j] = matrix[i-1][j-1];
-                    } else {
-                        matrix[i][j] = Math.min(
-                            matrix[i-1][j-1] + 1,
-                            matrix[i][j-1] + 1,
-                            matrix[i-1][j] + 1
-                        );
+            try {
+                // Блокируем интерфейс во время загрузки
+                loadModelBtn.disabled = true;
+                userInput.disabled = true;
+                sendButton.disabled = true;
+                modelStatus.textContent = "Загрузка модели...";
+                status.textContent = "Пожалуйста, подождите, модель загружается (это может занять несколько минут)...";
+                
+                // Создаем pipeline с колбэком прогресса
+                pipeline = await pipeline('text-generation', selectedModel, {
+                    quantized: true,
+                    progress_callback: (progress) => {
+                        const percent = Math.round(progress.progress * 100);
+                        loadProgress.style.width = `${percent}%`;
+                        modelStatus.textContent = `Загрузка: ${percent}%`;
+                        
+                        if (progress.progress === 1) {
+                            modelStatus.textContent = "Модель загружена!";
+                            status.textContent = "Модель готова к работе. Введите сообщение.";
+                            userInput.disabled = false;
+                            sendButton.disabled = false;
+                            userInput.focus();
+                            
+                            // Добавляем приветственное сообщение
+                            addMessage("bot", "Модель успешно загружена! Задайте ваш вопрос.");
+                        }
                     }
-                }
-            }
-            return matrix[b.length][a.length];
-        }
-
-        // Найти наиболее похожий вопрос в базе знаний
-        function findMostSimilarQuestion(question) {
-            let maxSimilarity = 0;
-            let bestMatch = null;
-            
-            // Проверяем выученные ответы
-            for (const learnedQuestion in conversationContext.learnedResponses) {
-                const similarity = stringSimilarity(question, learnedQuestion);
-                if (similarity > maxSimilarity && similarity > 0.6) {
-                    maxSimilarity = similarity;
-                    bestMatch = learnedQuestion;
-                }
-            }
-            
-            // Проверяем базовые знания
-            for (const baseQuestion in knowledgeBase) {
-                const similarity = stringSimilarity(question, baseQuestion);
-                if (similarity > maxSimilarity && similarity > 0.6) {
-                    maxSimilarity = similarity;
-                    bestMatch = baseQuestion;
-                }
-            }
-            
-            return { question: bestMatch, similarity: maxSimilarity };
-        }
-
-        // Генерация ответа с учетом контекста
-        function generateResponse(userMessage) {
-            // Сохраняем последний вопрос для контекста
-            conversationContext.lastQuestion = userMessage;
-            
-            // Приводим сообщение к нижнему регистру для сравнения
-            const lowerMessage = userMessage.toLowerCase();
-            
-            // Анализируем сообщение на специальные команды
-            if (lowerMessage.includes('зовут') && !lowerMessage.includes('тебя')) {
-                const name = userMessage.replace(/.*зовут\s*/i, '').trim();
-                if (name) {
-                    conversationContext.userName = name;
-                    return `Приятно познакомиться, ${name}! Я запомнил ваше имя.`;
-                }
-            }
-            
-            // Если бот узнал имя пользователя, используем его
-            if (conversationContext.userName && Math.random() > 0.7) {
-                const name = conversationContext.userName;
-                if (lowerMessage.includes('как дела')) {
-                    return `${name}, у меня всё хорошо! Спасибо, что интересуетесь!`;
-                }
-                if (lowerMessage.includes('привет')) {
-                    return `Привет, ${name}! Рад вас снова видеть!`;
-                }
-            }
-            
-            // Пытаемся найти похожий вопрос
-            const { question: similarQuestion, similarity } = findMostSimilarQuestion(lowerMessage);
-            
-            // Если нашли достаточно похожий вопрос
-            if (similarQuestion && similarity > 0.7) {
-                // Проверяем выученные ответы
-                if (conversationContext.learnedResponses[similarQuestion]) {
-                    const possibleAnswers = conversationContext.learnedResponses[similarQuestion];
-                    return possibleAnswers[Math.floor(Math.random() * possibleAnswers.length)];
-                }
-                
-                // Используем базовые знания
-                if (knowledgeBase[similarQuestion]) {
-                    const possibleAnswers = knowledgeBase[similarQuestion];
-                    return possibleAnswers[Math.floor(Math.random() * possibleAnswers.length)];
-                }
-            }
-            
-            // Если это похоже на вопрос, но ответа нет
-            if (lowerMessage.includes('?') || 
-                lowerMessage.startsWith('кто') || 
-                lowerMessage.startsWith('что') || 
-                lowerMessage.startsWith('как') || 
-                lowerMessage.startsWith('почему')) {
-                
-                // Добавляем в историю для возможного обучения
-                messageHistory.push({
-                    question: userMessage,
-                    timestamp: new Date()
                 });
                 
-                return "Интересный вопрос! Я пока не знаю на него ответа. Можете научить меня? Напишите ответ, который я должен запомнить, в формате: \"Запомни: [ответ]\"";
-            }
-            
-            // Ответ по умолчанию
-            const defaultResponses = [
-                "Понятно. Можете рассказать подробнее?",
-                "Интересно. Что вы ещё хотели бы обсудить?",
-                "Я вас слушаю. Продолжайте, пожалуйста.",
-                "Хорошо. Есть что-то конкретное, что вас интересует?"
-            ];
-            
-            return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
-        }
-
-        // Обработка команд обучения
-        function processLearningCommand(userMessage) {
-            const learnMatch = userMessage.match(/запомни:\s*(.+)/i);
-            if (learnMatch && conversationContext.lastQuestion) {
-                const answer = learnMatch[1].trim();
-                const question = conversationContext.lastQuestion.toLowerCase();
-                
-                if (!conversationContext.learnedResponses[question]) {
-                    conversationContext.learnedResponses[question] = [];
-                }
-                
-                conversationContext.learnedResponses[question].push(answer);
-                
-                // Сохраняем в localStorage
-                localStorage.setItem('aiLearnedResponses', JSON.stringify(conversationContext.learnedResponses));
-                
-                return `Спасибо! Я запомнил, что на вопрос "${conversationContext.lastQuestion}" нужно отвечать: "${answer}"`;
-            }
-            
-            return null;
-        }
-
-        // Отправка сообщения
-        function sendMessage() {
-            const userInput = document.getElementById('user-input');
-            const message = userInput.value.trim();
-            userInput.value = '';
-            
-            if (message === '') return;
-            
-            // Добавляем сообщение пользователя в чат
-            addMessageToChat(message, 'user');
-            
-            // Показываем индикатор набора сообщения
-            const typingIndicator = addTypingIndicator();
-            
-            // Имитируем задержку обработки
-            setTimeout(() => {
-                // Удаляем индикатор набора
-                removeTypingIndicator(typingIndicator);
-                
-                // Проверяем команду обучения
-                const learningResponse = processLearningCommand(message);
-                if (learningResponse) {
-                    addMessageToChat(learningResponse, 'bot');
-                    return;
-                }
-                
-                // Генерируем ответ
-                const response = generateResponse(message);
-                addMessageToChat(response, 'bot');
-                
-                // Прокручиваем чат вниз
-                scrollChatToBottom();
-            }, 1000 + Math.random() * 2000); // Случайная задержка 1-3 секунды
-        }
-
-        // Добавление сообщения в чат
-        function addMessageToChat(text, sender) {
-            const chatContainer = document.getElementById('chat-container');
-            const messageElement = document.createElement('div');
-            
-            messageElement.classList.add(sender + '-message');
-            messageElement.textContent = text;
-            
-            chatContainer.appendChild(messageElement);
-            scrollChatToBottom();
-            
-            // Сохраняем в историю
-            if (sender === 'user') {
-                messageHistory.push({
-                    text: text,
-                    sender: sender,
-                    timestamp: new Date()
-                });
-            }
-        }
-
-        // Добавление индикатора набора сообщения
-        function addTypingIndicator() {
-            const chatContainer = document.getElementById('chat-container');
-            const indicator = document.createElement('div');
-            
-            indicator.classList.add('bot-message', 'typing-indicator');
-            indicator.id = 'typing-indicator';
-            indicator.textContent = 'ИИ печатает...';
-            
-            chatContainer.appendChild(indicator);
-            scrollChatToBottom();
-            
-            return indicator;
-        }
-
-        // Удаление индикатора набора сообщения
-        function removeTypingIndicator(indicator) {
-            if (indicator && indicator.parentNode) {
-                indicator.parentNode.removeChild(indicator);
-            }
-        }
-
-        // Прокрутка чата вниз
-        function scrollChatToBottom() {
-            const chatContainer = document.getElementById('chat-container');
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        // Загрузка выученных ответов из localStorage
-        function loadLearnedResponses() {
-            const savedResponses = localStorage.getItem('aiLearnedResponses');
-            if (savedResponses) {
-                conversationContext.learnedResponses = JSON.parse(savedResponses);
-            }
-        }
-
-        // Обработка нажатия Enter
-        document.getElementById('user-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
+            } catch (error) {
+                console.error("Ошибка загрузки модели:", error);
+                modelStatus.textContent = "Ошибка загрузки модели";
+                status.textContent = `Ошибка: ${error.message}`;
+                loadModelBtn.disabled = false;
             }
         });
-
-        // Приветственное сообщение
-        window.onload = function() {
-            loadLearnedResponses();
+        
+        // Отправка сообщения
+        sendButton.addEventListener('click', generateResponse);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') generateResponse();
+        });
+        
+        async function generateResponse() {
+            const message = userInput.value.trim();
+            if (!message || !pipeline) return;
             
-            setTimeout(() => {
-                addMessageToChat("Привет! Я улучшенный мини-ИИ. Я могу поддерживать беседу, запоминать контекст и даже обучаться на ваших ответах. Давайте пообщаемся!", 'bot');
-            }, 500);
-        };
+            // Добавляем сообщение пользователя
+            addMessage("user", message);
+            userInput.value = "";
+            userInput.disabled = true;
+            sendButton.disabled = true;
+            status.textContent = "Модель генерирует ответ...";
+            
+            try {
+                // Генерация ответа
+                const response = await pipeline(message, {
+                    max_new_tokens: 100,
+                    temperature: 0.7,
+                    do_sample: true,
+                });
+                
+                // Добавляем ответ бота
+                addMessage("bot", response[0].generated_text);
+                status.textContent = "Готово";
+                
+            } catch (error) {
+                console.error("Ошибка генерации:", error);
+                addMessage("bot", `Ошибка: ${error.message}`);
+                status.textContent = "Ошибка генерации ответа";
+            }
+            
+            userInput.disabled = false;
+            sendButton.disabled = false;
+            userInput.focus();
+        }
+        
+        function addMessage(sender, text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', `${sender}-message`);
+            messageDiv.textContent = text;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
     </script>
 </body>
 </html>
