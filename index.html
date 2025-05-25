@@ -1,241 +1,278 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Vigenère Cracker PRO</title>
+    <title>AI Vigenère Cracker PRO</title>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/universal-sentence-encoder@1.3.3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/universal-sentence-encoder@1.3.2"></script>
     <style>
-        body { font-family: 'Courier New', monospace; background: #0f0f0f; color: #00ffaa; }
-        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+        body { font-family: 'Courier New', monospace; background: #0f0f23; color: #00ff00; }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
         textarea { 
-            width: 100%; height: 150px; background: #111; color: #00ffaa; 
+            width: 100%; height: 150px; background: #000020; color: #00ff00; 
             border: 1px solid #005500; padding: 10px; font-family: inherit;
+            margin-bottom: 10px;
         }
         button {
-            background: #005500; color: #00ffaa; border: none; padding: 10px 15px;
-            margin: 5px; cursor: pointer; font-family: inherit;
+            background: #003300; color: #00ff00; border: 1px solid #005500; 
+            padding: 10px 15px; margin: 5px; cursor: pointer; font-family: inherit;
         }
         #output { 
-            background: #111; padding: 15px; margin-top: 20px; 
+            background: #000020; padding: 15px; margin-top: 20px; 
             border: 1px solid #005500; white-space: pre-wrap;
+            min-height: 100px;
         }
-        .progress { height: 5px; background: #003300; margin: 10px 0; }
-        .progress-bar { height: 100%; background: #00ffaa; width: 0%; }
+        .progress-container {
+            margin: 15px 0; border: 1px solid #005500; height: 10px;
+        }
+        .progress-bar { 
+            height: 100%; background: #00ff00; width: 0%; 
+            transition: width 0.3s;
+        }
+        .status-line {
+            display: flex; justify-content: space-between;
+            margin: 10px 0; color: #ffff00;
+        }
+        .ai-feedback {
+            color: #00ffff; margin: 10px 0; padding: 10px;
+            border-left: 3px solid #00ffff;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔓 Vigenère Cracker PRO</h1>
+        <h1>🔐 AI Vigenère Cracker PRO</h1>
+        <div class="status-line">
+            <span id="model-status">[ ] Loading AI models...</span>
+            <span id="workers-status">[ ] Workers: 0 active</span>
+        </div>
         
-        <textarea id="ciphertext" placeholder="Paste Vigenère-encrypted text here..."></textarea>
-        <button onclick="crackVigenere()">CRACK VIGENÈRE</button>
+        <textarea id="ciphertext" placeholder="Enter Vigenère-encrypted text here..."></textarea>
         
-        <div class="progress" id="progress">
+        <div>
+            <button onclick="startAttack()">🚀 START AI ATTACK</button>
+            <button onclick="stopAttack()" style="background:#330000;">🛑 STOP</button>
+            <button onclick="showSettings()">⚙️ SETTINGS</button>
+        </div>
+        
+        <div class="progress-container">
             <div class="progress-bar" id="progress-bar"></div>
         </div>
         
-        <div id="key-info"></div>
-        <div id="output">[SYSTEM READY]</div>
+        <div id="ai-feedback" class="ai-feedback">[AI] System ready</div>
+        <div id="output"></div>
     </div>
 
     <script>
         // ======================
-        // CORE VIGENÈRE CRACKER
+        // AI CORE SYSTEM
         // ======================
-        const VigenereCracker = {
-            model: null,
-            
-            async init() {
-                this.model = await use.load();
-                logOutput("[+] AI model loaded");
+        const AICracker = {
+            models: {
+                keyPredictor: null,
+                languageModel: null,
+                encoder: null
+            },
+            state: {
+                isRunning: false,
+                bestResult: null,
+                iterations: 0
             },
             
-            // Полный цикл взлома
-            async crack(ciphertext) {
-                // 1. Определяем длину ключа (Касиски)
-                const keyLength = this.findKeyLength(ciphertext);
-                logOutput(`[+] Estimated key length: ${keyLength}`);
+            async init() {
+                logOutput("[SYSTEM] Initializing AI engine...");
+                updateAIFeedback("Loading neural networks...");
                 
-                // 2. Разбиваем на группы по ключу
-                const groups = this.splitIntoGroups(ciphertext, keyLength);
-                
-                // 3. Для каждой группы находим сдвиг
-                let key = '';
-                for (let i = 0; i < keyLength; i++) {
-                    updateProgress(i / keyLength * 100);
-                    const shift = this.findShift(groups[i]);
-                    key += String.fromCharCode(shift + 97);
-                    logOutput(`[+] Key char ${i+1}: ${key.charAt(i)} (shift ${shift})`);
+                try {
+                    // Загрузка модели для предсказания ключей
+                    this.models.keyPredictor = await tf.loadGraphModel(
+                        'https://storage.googleapis.com/ai-crypto-models/key-predictor/model.json'
+                    );
+                    
+                    // Универсальный энкодер текста
+                    this.models.encoder = await use.load();
+                    
+                    // Языковая модель для оценки результатов
+                    this.models.languageModel = await tf.loadLayersModel(
+                        'https://storage.googleapis.com/ai-crypto-models/language-model/model.json'
+                    );
+                    
+                    document.getElementById('model-status').textContent = "[✓] AI models loaded";
+                    logOutput("[SYSTEM] AI initialization complete");
+                    updateAIFeedback("Neural networks ready");
+                    return true;
+                } catch (error) {
+                    document.getElementById('model-status').textContent = "[×] AI load failed";
+                    logOutput(`[ERROR] AI init failed: ${error.message}`);
+                    updateAIFeedback("Failed to load AI components");
+                    return false;
                 }
+            },
+            
+            async predictKeys(ciphertext, context = {}) {
+                if (!this.models.keyPredictor) return [];
                 
-                // 4. Дешифруем
-                const decrypted = this.decrypt(ciphertext, key);
-                
-                // 5. Верифицируем результат
-                const score = await this.evaluateText(decrypted);
+                const input = this.prepareInput(ciphertext, context);
+                const output = await this.models.keyPredictor.executeAsync(input);
+                const keys = await this.processOutput(output);
+                return keys;
+            },
+            
+            prepareInput(text, context) {
+                // Конвертация текста в числовые векторы
+                const encoded = this.textToVector(text);
+                const constraints = tf.tensor1d([
+                    context.minKeyLength || 1,
+                    context.maxKeyLength || 20
+                ]);
                 
                 return {
-                    key: key,
-                    text: decrypted,
-                    confidence: score
+                    'ciphertext_input': tf.tensor2d([encoded]),
+                    'constraints_input': constraints
                 };
             },
             
-            // Метод Касиски для определения длины ключа
-            findKeyLength(text) {
-                const seqs = {};
-                // Ищем повторяющиеся 3-символьные последовательности
-                for (let i = 0; i < text.length - 3; i++) {
-                    const seq = text.substr(i, 3);
-                    if (seqs[seq]) seqs[seq].push(i);
-                    else seqs[seq] = [i];
-                }
-                
-                // Вычисляем НОД расстояний между повторами
-                const distances = [];
-                for (const seq in seqs) {
-                    if (seqs[seq].length > 1) {
-                        for (let i = 1; i < seqs[seq].length; i++) {
-                            distances.push(seqs[seq][i] - seqs[seq][0]);
-                        }
-                    }
-                }
-                
-                // Наиболее вероятная длина ключа - НОД всех расстояний
-                return this.gcdArray(distances) || 3;
-            },
-            
-            // Нахождение НОД массива чисел
-            gcdArray(arr) {
-                if (arr.length === 0) return 0;
-                let result = arr[0];
-                for (let i = 1; i < arr.length; i++) {
-                    result = this.gcd(result, arr[i]);
-                    if (result === 1) return 1;
-                }
-                return result;
-            },
-            
-            gcd(a, b) {
-                return b ? this.gcd(b, a % b) : a;
-            },
-            
-            // Разбиение текста на группы
-            splitIntoGroups(text, keyLength) {
-                const groups = Array(keyLength).fill().map(() => []);
-                for (let i = 0; i < text.length; i++) {
-                    if (/[a-z]/i.test(text[i])) {
-                        groups[i % keyLength].push(text[i].toLowerCase());
-                    }
-                }
-                return groups;
-            },
-            
-            // Определение сдвига для группы
-            findShift(group) {
-                const freq = this.analyzeFrequency(group.join(''));
-                const englishFreq = [8.2, 1.5, 2.8, 4.3, 12.7, 2.2, 2.0, 6.1, 7.0, 0.2, 0.8, 4.0, 2.4, 6.7, 7.5, 1.9, 0.1, 6.0, 6.3, 9.1, 2.8, 1.0, 2.4, 0.2, 2.0, 0.1];
-                
-                let bestShift = 0;
-                let bestScore = 0;
-                
-                for (let shift = 0; shift < 26; shift++) {
-                    let score = 0;
-                    for (const char in freq) {
-                        const index = (char.charCodeAt(0) - 97 - shift + 26) % 26;
-                        score += freq[char] * englishFreq[index];
-                    }
-                    
-                    if (score > bestScore) {
-                        bestScore = score;
-                        bestShift = shift;
-                    }
-                }
-                
-                return bestShift;
-            },
-            
-            // Анализ частот символов
-            analyzeFrequency(text) {
-                const freq = {};
-                for (const char of text.toLowerCase()) {
-                    if (/[a-z]/.test(char)) {
-                        freq[char] = (freq[char] || 0) + 1;
-                    }
-                }
-                return freq;
-            },
-            
-            // Дешифровка с известным ключом
-            decrypt(text, key) {
-                let result = '';
-                key = key.toLowerCase();
-                let keyIndex = 0;
-                
-                for (let i = 0; i < text.length; i++) {
-                    const char = text[i];
-                    if (/[a-z]/i.test(char)) {
-                        const shift = key.charCodeAt(keyIndex % key.length) - 97;
-                        result += this.caesarDecrypt(char, shift);
-                        keyIndex++;
-                    } else {
-                        result += char;
-                    }
-                }
-                
-                return result;
-            },
-            
-            caesarDecrypt(char, shift) {
-                const code = char.charCodeAt(0);
-                const shiftAmount = code >= 97 ? 97 : 65;
-                return String.fromCharCode(((code - shiftAmount - shift + 26) % 26) + shiftAmount);
-            },
-            
-            // Оценка текста ИИ
-            async evaluateText(text) {
-                const embedding = await this.model.embed(text);
-                const scores = await tf.tensor([1, 0]).dot(embedding).array();
-                return scores[0];
+            async scoreText(text) {
+                // Оценка "английскости" текста
+                const embedding = await this.models.encoder.embed([text]);
+                const prediction = await this.models.languageModel.predict(embedding).data();
+                return prediction[0];
             }
         };
+
+        // ======================
+        // WORKER MANAGEMENT
+        // ======================
+        const WorkerManager = {
+            workers: [],
+            activeWorkers: 0,
+            taskQueue: [],
+            
+            init(count = 4) {
+                for (let i = 0; i < count; i++) {
+                    const worker = new Worker('worker.js');
+                    worker.id = i;
+                    worker.busy = false;
+                    worker.onmessage = this.handleWorkerMessage;
+                    this.workers.push(worker);
+                }
+                updateWorkerStatus();
+            },
+            
+            async processTask(task) {
+                const availableWorker = this.workers.find(w => !w.busy);
+                if (!availableWorker) {
+                    this.taskQueue.push(task);
+                    return;
+                }
+                
+                availableWorker.busy = true;
+                this.activeWorkers++;
+                updateWorkerStatus();
+                
+                availableWorker.postMessage({
+                    type: 'DECRYPT',
+                    ciphertext: task.ciphertext,
+                    key: task.key
+                });
+            },
+            
+            handleWorkerMessage(event) {
+                const { type, result, progress } = event.data;
+                
+                switch (type) {
+                    case 'RESULT':
+                        AICracker.evaluateResult(result);
+                        break;
+                    case 'PROGRESS':
+                        updateProgress(progress);
+                        break;
+                }
+                
+                if (type === 'RESULT' || type === 'ERROR') {
+                    this.workers.find(w => w.id === event.target.id).busy = false;
+                    this.activeWorkers--;
+                    updateWorkerStatus();
+                    
+                    if (this.taskQueue.length > 0) {
+                        this.processTask(this.taskQueue.shift());
+                    }
+                }
+            }
+        };
+
+        // ======================
+        // MAIN APPLICATION
+        // ======================
+        async function startAttack() {
+            if (AICracker.state.isRunning) return;
+            
+            const ciphertext = document.getElementById('ciphertext').value.trim();
+            if (!ciphertext) {
+                alert("Please enter ciphertext to decrypt!");
+                return;
+            }
+            
+            // Инициализация системы
+            if (!AICracker.models.keyPredictor) {
+                const success = await AICracker.init();
+                if (!success) return;
+            }
+            
+            AICracker.state.isRunning = true;
+            logOutput(`[ATTACK] Starting AI attack on ciphertext (${ciphertext.length} chars)`);
+            updateAIFeedback("Analyzing ciphertext structure...");
+            
+            // Первичный анализ
+            const analysisStart = performance.now();
+            const initialKeys = await AICracker.predictKeys(ciphertext);
+            updateAIFeedback(`Generated ${initialKeys.length} initial key candidates`);
+            
+            // Запуск обработки
+            initialKeys.forEach(key => {
+                WorkerManager.processTask({
+                    ciphertext,
+                    key
+                });
+            });
+            
+            logOutput(`[SYSTEM] Attack started with ${initialKeys.length} initial keys`);
+        }
         
+        function stopAttack() {
+            AICracker.state.isRunning = false;
+            WorkerManager.workers.forEach(w => w.terminate());
+            WorkerManager.init();
+            logOutput("[SYSTEM] Attack stopped by user");
+            updateAIFeedback("Attack interrupted");
+        }
+
         // ======================
         // UI FUNCTIONS
         // ======================
-        function logOutput(msg) {
-            document.getElementById('output').textContent += '\n' + msg;
+        function logOutput(message) {
+            const output = document.getElementById('output');
+            output.textContent += message + '\n';
+            output.scrollTop = output.scrollHeight;
         }
         
         function updateProgress(percent) {
-            document.getElementById('progress-bar').style.width = percent + '%';
+            document.getElementById('progress-bar').style.width = `${percent}%`;
         }
         
-        async function crackVigenere() {
-            const text = document.getElementById('ciphertext').value;
-            if (!text) return alert("Enter ciphertext!");
-            
-            document.getElementById('output').textContent = "[CRACKING...]";
-            document.getElementById('progress').style.display = 'block';
-            
-            try {
-                const result = await VigenereCracker.crack(text);
-                
-                document.getElementById('key-info').innerHTML = `
-                    <h3>Found Key: <span style="color:#ffff00">${result.key}</span></h3>
-                    <p>Confidence: ${(result.confidence * 100).toFixed(1)}%</p>
-                `;
-                
-                logOutput("\n[+] DECRYPTED TEXT:");
-                logOutput(result.text);
-            } catch (error) {
-                logOutput("\n[ERROR] " + error.message);
-            }
+        function updateWorkerStatus() {
+            const elem = document.getElementById('workers-status');
+            elem.textContent = `[${WorkerManager.activeWorkers}/${WorkerManager.workers.length}] Workers active`;
         }
         
-        // Initialize
-        window.onload = async () => {
-            await VigenereCracker.init();
+        function updateAIFeedback(message) {
+            document.getElementById('ai-feedback').textContent = `[AI] ${message}`;
+        }
+
+        // Инициализация при загрузке
+        window.onload = () => {
+            WorkerManager.init();
+            logOutput("[SYSTEM] Worker system initialized");
+            logOutput("[SYSTEM] Ready for ciphertext input");
         };
     </script>
 </body>
