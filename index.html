@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Полиалфавитный шифр Полибия</title>
+    <title>Двойной квадрат Полибия</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
             background-color: #f5f5f5;
@@ -18,7 +18,7 @@
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        h1 {
+        h1, h2 {
             color: #333;
             text-align: center;
         }
@@ -30,7 +30,7 @@
             margin-bottom: 5px;
             font-weight: bold;
         }
-        input, textarea, select {
+        input, textarea {
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
@@ -53,11 +53,21 @@
         button:hover {
             background-color: #45a049;
         }
-        #polybiusSquare {
+        .squares-container {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .square {
+            flex: 1;
+            min-width: 300px;
+        }
+        .square-grid {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
             gap: 5px;
-            margin: 20px 0;
+            margin-top: 10px;
         }
         .square-header {
             background-color: #333;
@@ -91,12 +101,19 @@
 </head>
 <body>
     <div class="container">
-        <h1>Полиалфавитный шифр Полибия</h1>
+        <h1>Двойной квадрат Полибия</h1>
+        <p style="text-align: center;">Символьный квадрат + Буквенный квадрат</p>
         
         <div class="input-group">
-            <label for="alphabet">25 уникальных символов (для квадрата 5x5):</label>
+            <label for="symbols">25 уникальных символов (для символьного квадрата 5x5):</label>
+            <input type="text" id="symbols" maxlength="25" 
+                   value="%$#=*-<+!?1234567890zzwo" placeholder="Например: %$#=*-<+!?1234567890zzwo">
+        </div>
+        
+        <div class="input-group">
+            <label for="alphabet">25 букв (для буквенного квадрата 5x5):</label>
             <input type="text" id="alphabet" maxlength="25" 
-                   value="%$#=*-<+!?1234567890zzwo" placeholder="Например: абвгдеёжзийклмнопрстуфхцчшщ">
+                   value="абвгдеёжзийклмнопрстуфхцч" placeholder="Например: абвгдеёжзийклмнопрстуфхцч">
         </div>
         
         <div class="input-group">
@@ -105,17 +122,8 @@
         </div>
         
         <div class="input-group">
-            <label for="algorithm">Алгоритм преобразования:</label>
-            <select id="algorithm">
-                <option value="vigenere">Виженер (сдвиг координат)</option>
-                <option value="swap">Обмен строк/столбцов</option>
-                <option value="rotate">Поворот квадрата</option>
-            </select>
-        </div>
-        
-        <div class="input-group">
             <label for="inputText">Исходный текст:</label>
-            <textarea id="inputText">HELLO</textarea>
+            <textarea id="inputText">ПРИВЕТ</textarea>
         </div>
         
         <button onclick="encrypt()">Зашифровать</button>
@@ -126,137 +134,190 @@
             <textarea id="outputText" readonly></textarea>
         </div>
         
-        <h2>Квадрат Полибия</h2>
-        <div id="polybiusSquare"></div>
+        <div class="squares-container">
+            <div class="square">
+                <h2>Символьный квадрат</h2>
+                <div class="square-grid" id="symbolSquare"></div>
+            </div>
+            <div class="square">
+                <h2>Буквенный квадрат</h2>
+                <div class="square-grid" id="letterSquare"></div>
+            </div>
+        </div>
         
         <div class="process-steps" id="processSteps"></div>
     </div>
 
     <script>
-        let currentSquare = [];
-        let originalSquare = [];
+        let symbolSquare = [];
+        let letterSquare = [];
         
-        // Инициализация квадрата
-        function initSquare() {
+        // Инициализация квадратов
+        function initSquares() {
+            const symbols = document.getElementById('symbols').value.trim();
             const alphabet = document.getElementById('alphabet').value.trim();
-            const square = document.getElementById('polybiusSquare');
-            square.innerHTML = '';
+            
+            // Очистка
+            document.getElementById('symbolSquare').innerHTML = '';
+            document.getElementById('letterSquare').innerHTML = '';
+            
+            // Проверки
+            if (symbols.length !== 25 || alphabet.length !== 25) {
+                alert("Оба квадрата должны содержать ровно 25 символов!");
+                return false;
+            }
+            
+            // Создаем квадраты
+            symbolSquare = createSquare(symbols, 'symbolSquare');
+            letterSquare = createSquare(alphabet, 'letterSquare');
+            
+            return true;
+        }
+        
+        // Создание одного квадрата
+        function createSquare(chars, elementId) {
+            const square = [];
+            const grid = document.getElementById(elementId);
             
             // Заголовки столбцов
             const headerRow = document.createElement('div');
             headerRow.className = 'square-header';
             headerRow.textContent = '';
-            square.appendChild(headerRow);
+            grid.appendChild(headerRow);
             
             for (let col = 1; col <= 5; col++) {
                 const header = document.createElement('div');
                 header.className = 'square-header';
                 header.textContent = col;
-                square.appendChild(header);
+                grid.appendChild(header);
             }
             
             // Заполнение квадрата
-            currentSquare = [];
-            originalSquare = [];
-            
             for (let row = 0; row < 5; row++) {
                 const rowHeader = document.createElement('div');
                 rowHeader.className = 'square-header';
                 rowHeader.textContent = row + 1;
-                square.appendChild(rowHeader);
+                grid.appendChild(rowHeader);
                 
                 const currentRow = [];
-                const originalRow = [];
                 
                 for (let col = 0; col < 5; col++) {
                     const index = row * 5 + col;
-                    const char = index < alphabet.length ? alphabet[index] : '?';
+                    const char = chars[index];
                     
                     const cell = document.createElement('div');
                     cell.className = 'square-cell';
                     cell.textContent = char;
                     cell.dataset.row = row + 1;
                     cell.dataset.col = col + 1;
-                    square.appendChild(cell);
+                    grid.appendChild(cell);
                     
                     currentRow.push(char);
-                    originalRow.push(char);
                 }
                 
-                currentSquare.push(currentRow);
-                originalSquare.push(originalRow);
+                square.push(currentRow);
             }
+            
+            return square;
         }
         
-        // Шифрование с алгоритмом Виженера
-        function encryptVigenere(text, key) {
+        // Шифрование
+        function encrypt() {
+            if (!initSquares()) return;
+            
+            const text = document.getElementById('inputText').value.toLowerCase();
+            const key = document.getElementById('key').value.toLowerCase();
             let result = '';
-            const steps = [];
+            let steps = [];
             
             for (let i = 0; i < text.length; i++) {
                 const char = text[i];
                 const keyChar = key[i % key.length];
                 
-                // Находим координаты символа и ключа
-                let charCoords = findCoordinates(char);
-                let keyCoords = findCoordinates(keyChar);
-                
-                if (!charCoords || !keyCoords) {
+                // 1. Находим букву в буквенном квадрате
+                const letterCoords = findCoordinates(char, letterSquare);
+                if (!letterCoords) {
                     result += char;
-                    steps.push(`Символ '${char}' или ключ '${keyChar}' не найдены`);
+                    steps.push(`Буква '${char}' не найдена в буквенном квадрате`);
                     continue;
                 }
                 
-                // Применяем сдвиг
-                const newRow = (charCoords.row + keyCoords.row - 1) % 5;
-                const newCol = (charCoords.col + keyCoords.col - 1) % 5;
+                // 2. Находим ключевую букву в буквенном квадрате
+                const keyCoords = findCoordinates(keyChar, letterSquare);
+                if (!keyCoords) {
+                    result += char;
+                    steps.push(`Ключевая буква '${keyChar}' не найдена`);
+                    continue;
+                }
                 
-                const newChar = currentSquare[newRow][newCol];
-                result += newChar;
+                // 3. Вычисляем новые координаты (сдвиг)
+                const newRow = (letterCoords.row + keyCoords.row - 2) % 5;
+                const newCol = (letterCoords.col + keyCoords.col - 2) % 5;
                 
-                steps.push(`'${char}' (${charCoords.row},${charCoords.col}) + '${keyChar}' (${keyCoords.row},${keyCoords.col}) → '${newChar}' (${newRow+1},${newCol+1})`);
+                // 4. Берем символ из символьного квадрата
+                const symbol = symbolSquare[newRow][newCol];
+                result += symbol;
+                
+                steps.push(`'${char}' (${letterCoords.row},${letterCoords.col}) + '${keyChar}' → '${symbol}' (${newRow+1},${newCol+1})`);
             }
             
-            return { result, steps };
+            document.getElementById('outputText').value = result;
+            document.getElementById('processSteps').innerHTML = 
+                '<h3>Процесс шифрования:</h3>' + 
+                steps.map(step => `<div>${step}</div>`).join('');
         }
         
-        // Дешифрование с алгоритмом Виженера
-        function decryptVigenere(text, key) {
+        // Дешифрование
+        function decrypt() {
+            if (!initSquares()) return;
+            
+            const text = document.getElementById('inputText').value;
+            const key = document.getElementById('key').value.toLowerCase();
             let result = '';
-            const steps = [];
+            let steps = [];
             
             for (let i = 0; i < text.length; i++) {
-                const char = text[i];
+                const symbol = text[i];
                 const keyChar = key[i % key.length];
                 
-                // Находим координаты символа и ключа
-                let charCoords = findCoordinates(char);
-                let keyCoords = findCoordinates(keyChar);
-                
-                if (!charCoords || !keyCoords) {
-                    result += char;
-                    steps.push(`Символ '${char}' или ключ '${keyChar}' не найдены`);
+                // 1. Находим символ в символьном квадрате
+                const symbolCoords = findCoordinates(symbol, symbolSquare);
+                if (!symbolCoords) {
+                    result += symbol;
+                    steps.push(`Символ '${symbol}' не найден`);
                     continue;
                 }
                 
-                // Обратный сдвиг
-                let origRow = (charCoords.row - keyCoords.row + 4) % 5;
-                let origCol = (charCoords.col - keyCoords.col + 4) % 5;
+                // 2. Находим ключевую букву в буквенном квадрате
+                const keyCoords = findCoordinates(keyChar, letterSquare);
+                if (!keyCoords) {
+                    result += symbol;
+                    steps.push(`Ключевая буква '${keyChar}' не найдена`);
+                    continue;
+                }
                 
-                const origChar = originalSquare[origRow][origCol];
-                result += origChar;
+                // 3. Вычисляем исходные координаты (обратный сдвиг)
+                const origRow = (symbolCoords.row - keyCoords.row + 5) % 5;
+                const origCol = (symbolCoords.col - keyCoords.col + 5) % 5;
                 
-                steps.push(`'${char}' (${charCoords.row},${charCoords.col}) - '${keyChar}' (${keyCoords.row},${keyCoords.col}) → '${origChar}' (${origRow+1},${origCol+1})`);
+                // 4. Берем букву из буквенного квадрата
+                const letter = letterSquare[origRow][origCol];
+                result += letter;
+                
+                steps.push(`'${symbol}' (${symbolCoords.row},${symbolCoords.col}) - '${keyChar}' → '${letter}' (${origRow+1},${origCol+1})`);
             }
             
-            return { result, steps };
+            document.getElementById('outputText').value = result;
+            document.getElementById('processSteps').innerHTML = 
+                '<h3>Процесс дешифрования:</h3>' + 
+                steps.map(step => `<div>${step}</div>`).join('');
         }
         
-        // Поиск координат символа
-        function findCoordinates(char) {
+        // Поиск координат символа в квадрате
+        function findCoordinates(char, square) {
             for (let row = 0; row < 5; row++) {
                 for (let col = 0; col < 5; col++) {
-                    if (currentSquare[row][col] === char) {
+                    if (square[row][col] === char) {
                         return { row: row + 1, col: col + 1 };
                     }
                 }
@@ -264,90 +325,8 @@
             return null;
         }
         
-        // Применение алгоритма преобразования квадрата
-        function transformSquare(algorithm) {
-            // Сброс к оригинальному квадрату
-            for (let row = 0; row < 5; row++) {
-                for (let col = 0; col < 5; col++) {
-                    currentSquare[row][col] = originalSquare[row][col];
-                }
-            }
-            
-            if (algorithm === 'swap') {
-                // Случайный обмен строк и столбцов
-                for (let i = 0; i < 3; i++) {
-                    const row1 = Math.floor(Math.random() * 5);
-                    const row2 = Math.floor(Math.random() * 5);
-                    [currentSquare[row1], currentSquare[row2]] = [currentSquare[row2], currentSquare[row1]];
-                    
-                    for (let row = 0; row < 5; row++) {
-                        const col1 = Math.floor(Math.random() * 5);
-                        const col2 = Math.floor(Math.random() * 5);
-                        [currentSquare[row][col1], currentSquare[row][col2]] = 
-                        [currentSquare[row][col2], currentSquare[row][col1]];
-                    }
-                }
-            } 
-            else if (algorithm === 'rotate') {
-                // Поворот квадрата
-                const rotated = [[],[],[],[],[]];
-                for (let row = 0; row < 5; row++) {
-                    for (let col = 0; col < 5; col++) {
-                        rotated[4-col][row] = currentSquare[row][col];
-                    }
-                }
-                currentSquare = rotated;
-            }
-            
-            // Обновляем отображение
-            updateSquareView();
-        }
-        
-        // Обновление отображения квадрата
-        function updateSquareView() {
-            const cells = document.querySelectorAll('.square-cell');
-            let index = 0;
-            
-            for (let row = 0; row < 5; row++) {
-                for (let col = 0; col < 5; col++) {
-                    cells[index].textContent = currentSquare[row][col];
-                    index++;
-                }
-            }
-        }
-        
-        function encrypt() {
-            initSquare();
-            const text = document.getElementById('inputText').value;
-            const key = document.getElementById('key').value;
-            const algorithm = document.getElementById('algorithm').value;
-            
-            transformSquare(algorithm);
-            
-            const { result, steps } = encryptVigenere(text, key);
-            document.getElementById('outputText').value = result;
-            document.getElementById('processSteps').innerHTML = 
-                '<h3>Процесс шифрования:</h3>' + 
-                steps.map(step => `<div>${step}</div>`).join('');
-        }
-        
-        function decrypt() {
-            initSquare();
-            const text = document.getElementById('inputText').value;
-            const key = document.getElementById('key').value;
-            const algorithm = document.getElementById('algorithm').value;
-            
-            transformSquare(algorithm);
-            
-            const { result, steps } = decryptVigenere(text, key);
-            document.getElementById('outputText').value = result;
-            document.getElementById('processSteps').innerHTML = 
-                '<h3>Процесс дешифрования:</h3>' + 
-                steps.map(step => `<div>${step}</div>`).join('');
-        }
-        
         // Инициализация при загрузке
-        window.onload = initSquare;
+        window.onload = initSquares;
     </script>
 </body>
 </html>
