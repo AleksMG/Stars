@@ -3,634 +3,351 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Исправленный шифр Полибия</title>
+    <title>Полиалфавитный шифр Полибия</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
         body {
-            background: linear-gradient(135deg, #1a2980, #26d0ce);
-            color: #fff;
-            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
             padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            background-color: #f5f5f5;
         }
         .container {
-            background: rgba(0, 0, 0, 0.7);
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            padding: 30px;
-            width: 100%;
-            max-width: 1000px;
-            margin: 20px 0;
-        }
-        header {
-            text-align: center;
-            margin-bottom: 30px;
+            background-color: white;
             padding: 20px;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         h1 {
-            font-size: 2.8rem;
-            margin-bottom: 10px;
-            color: #ffcc00;
-            text-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
-        }
-        .panel {
-            background: rgba(30, 30, 50, 0.8);
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 25px;
-            border: 1px solid #444;
-        }
-        .panel-title {
-            color: #4dccbd;
-            margin-bottom: 15px;
-            font-size: 1.6rem;
-            display: flex;
-            align-items: center;
-        }
-        .panel-title i {
-            margin-right: 10px;
+            color: #333;
+            text-align: center;
         }
         .input-group {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         label {
             display: block;
-            margin-bottom: 8px;
-            color: #aaa;
-            font-size: 1.2rem;
+            margin-bottom: 5px;
+            font-weight: bold;
         }
-        input, textarea {
+        input, textarea, select {
             width: 100%;
-            padding: 14px;
-            border-radius: 8px;
-            border: 2px solid #444;
-            background: rgba(10, 10, 20, 0.7);
-            color: #fff;
-            font-size: 1.2rem;
-            transition: all 0.3s;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
         }
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: #4dccbd;
-            box-shadow: 0 0 10px rgba(77, 204, 189, 0.5);
-        }
-        .btn-group {
-            display: flex;
-            gap: 15px;
-            margin: 20px 0;
+        textarea {
+            height: 100px;
+            font-family: monospace;
         }
         button {
-            flex: 1;
-            padding: 16px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
             border: none;
-            border-radius: 8px;
-            font-size: 1.2rem;
-            font-weight: bold;
+            border-radius: 4px;
             cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .encrypt-btn {
-            background: linear-gradient(to right, #4CAF50, #2E8B57);
-            color: white;
-        }
-        .decrypt-btn {
-            background: linear-gradient(to right, #f44336, #B22222);
-            color: white;
-        }
-        .reset-btn {
-            background: linear-gradient(to right, #2196F3, #0D47A1);
-            color: white;
+            margin-right: 10px;
         }
         button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            background-color: #45a049;
         }
-        .polybius-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 30px;
-            margin: 30px 0;
+        #polybiusSquare {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 5px;
+            margin: 20px 0;
         }
-        .square-container {
-            flex: 1;
-            min-width: 300px;
-        }
-        .coordinates {
-            display: flex;
-            margin-bottom: 10px;
-            padding-left: 40px;
-        }
-        .coordinate {
-            width: 50px;
+        .square-header {
+            background-color: #333;
+            color: white;
+            padding: 10px;
             text-align: center;
             font-weight: bold;
-            color: #4dccbd;
-            font-size: 1.2rem;
         }
-        .polybius-grid {
-            display: grid;
-            grid-template-columns: 40px repeat(5, 1fr);
-            gap: 5px;
-        }
-        .grid-header {
-            background: #333;
-            color: #ffcc00;
+        .square-cell {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+            background-color: #f9f9f9;
             font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 12px;
-            height: 60px;
-            font-size: 1.2rem;
         }
-        .grid-cell {
-            background: rgba(50, 50, 80, 0.8);
-            border: 2px solid #555;
-            aspect-ratio: 1/1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-        .grid-cell.active-input {
-            background: #4dccbd;
-            color: #000;
-            transform: scale(1.1);
-            box-shadow: 0 0 15px rgba(77, 204, 189, 0.7);
-        }
-        .grid-cell.active-key {
-            background: #ffcc00;
-            color: #000;
-            transform: scale(1.1);
-            box-shadow: 0 0 15px rgba(255, 204, 0, 0.7);
-        }
-        .grid-cell.active-output {
-            background: #f44336;
-            color: #000;
-            transform: scale(1.1);
-            box-shadow: 0 0 15px rgba(244, 67, 54, 0.7);
+        .active {
+            background-color: #4dccbd;
+            color: white;
         }
         .process-steps {
-            background: rgba(20, 20, 40, 0.8);
-            border-radius: 10px;
-            padding: 20px;
             margin-top: 20px;
-            min-height: 200px;
-            font-size: 1.1rem;
-        }
-        .step {
-            margin-bottom: 15px;
-            padding: 12px;
-            border-radius: 8px;
-            background: rgba(40, 40, 60, 0.6);
-        }
-        .result-container {
-            background: rgba(30, 50, 30, 0.7);
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-        .result-text {
-            font-size: 2rem;
-            text-align: center;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            font-family: monospace;
-            letter-spacing: 3px;
-            min-height: 100px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            word-break: break-all;
-        }
-        .highlight {
-            color: #ffcc00;
-            font-weight: bold;
-            background: rgba(255, 204, 0, 0.1);
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 1.4rem;
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
         }
         .error {
-            color: #ff5555;
+            color: red;
             font-weight: bold;
-            margin: 10px 0;
-            padding: 12px;
-            border-radius: 5px;
-            background: rgba(255, 85, 85, 0.1);
-            font-size: 1.1rem;
-        }
-        .explanation {
-            margin-top: 20px;
-            line-height: 1.6;
-            color: #ccc;
-            font-size: 1.1rem;
-        }
-        .explanation h3 {
-            color: #4dccbd;
-            margin-bottom: 10px;
-            font-size: 1.4rem;
-        }
-        footer {
-            text-align: center;
-            margin-top: 20px;
-            color: #aaa;
-            padding: 20px;
-            width: 100%;
-            font-size: 1.1rem;
-        }
-        @media (max-width: 768px) {
-            .polybius-container {
-                flex-direction: column;
-            }
-            .btn-group {
-                flex-direction: column;
-            }
-            h1 {
-                font-size: 2rem;
-            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>🔐 Исправленный шифр Полибия</h1>
-            <p>Работает с любыми символами: буквами, цифрами, спецсимволами</p>
-        </header>
+        <h1>Полиалфавитный шифр Полибия</h1>
         
-        <div class="panel">
-            <div class="panel-title">⚙️ Настройки шифра</div>
-            <div class="input-group">
-                <label for="alphabet">Введите 25 уникальных символов для квадрата Полибия:</label>
-                <input type="text" id="alphabet" maxlength="25" value="%$#=*-<+!?1234567890zzwo" placeholder="Например: %$#=*-<+!?1234567890zzwo">
-                <div class="error" id="alphabetError"></div>
-            </div>
-            
-            <div class="input-group">
-                <label for="key">Ключ шифрования:</label>
-                <input type="text" id="key" value="Секретный ключ" placeholder="Введите ключ">
-            </div>
-            
-            <div class="input-group">
-                <label for="inputText">Исходный текст:</label>
-                <textarea id="inputText" placeholder="Введите текст для шифрования">HELLO</textarea>
-            </div>
-            
-            <div class="btn-group">
-                <button class="encrypt-btn" onclick="encrypt()">🔒 Зашифровать</button>
-                <button class="decrypt-btn" onclick="decrypt()">🔓 Расшифровать</button>
-                <button class="reset-btn" onclick="resetAll()">🔄 Сбросить</button>
-            </div>
+        <div class="input-group">
+            <label for="alphabet">25 уникальных символов (для квадрата 5x5):</label>
+            <input type="text" id="alphabet" maxlength="25" 
+                   value="%$#=*-<+!?1234567890zzwo" placeholder="Например: абвгдеёжзийклмнопрстуфхцчшщ">
         </div>
         
-        <div class="polybius-container">
-            <div class="square-container">
-                <div class="panel-title">🧮 Квадрат Полибия</div>
-                <div class="coordinates">
-                    <div style="width:40px"></div>
-                    <div class="coordinate">1</div>
-                    <div class="coordinate">2</div>
-                    <div class="coordinate">3</div>
-                    <div class="coordinate">4</div>
-                    <div class="coordinate">5</div>
-                </div>
-                <div class="polybius-grid" id="polybiusGrid"></div>
-            </div>
-            
-            <div class="process-steps">
-                <div class="panel-title">📝 Процесс шифрования</div>
-                <div id="processSteps"></div>
-            </div>
+        <div class="input-group">
+            <label for="key">Ключ шифрования:</label>
+            <input type="text" id="key" value="секрет" placeholder="Введите ключ">
         </div>
         
-        <div class="result-container">
-            <div class="panel-title">📜 Результат</div>
-            <div class="result-text" id="outputText">-</div>
+        <div class="input-group">
+            <label for="algorithm">Алгоритм преобразования:</label>
+            <select id="algorithm">
+                <option value="vigenere">Виженер (сдвиг координат)</option>
+                <option value="swap">Обмен строк/столбцов</option>
+                <option value="rotate">Поворот квадрата</option>
+            </select>
         </div>
         
-        <div class="explanation">
-            <h3>📖 Как это работает</h3>
-            <p>Шифр Полибия использует квадрат 5×5, заполненный произвольными символами. Каждый символ имеет координаты (ряд, столбец).</p>
-            <p>При шифровании:</p>
-            <ol>
-                <li>Каждый символ текста заменяется на его координаты в квадрате</li>
-                <li>К координатам добавляется смещение на основе ключа</li>
-                <li>Новые координаты преобразуются обратно в символы</li>
-            </ol>
-            <p>Дешифрование работает в обратном порядке. Ключ делает шифр более стойким к взлому.</p>
-            <p>Пример: Для символа 'H' с координатами (2,3) и символа ключа 'С' с координатами (1,2) 
-            новые координаты будут (3,5), по которым в квадрате находится символ '0'</p>
+        <div class="input-group">
+            <label for="inputText">Исходный текст:</label>
+            <textarea id="inputText">HELLO</textarea>
         </div>
+        
+        <button onclick="encrypt()">Зашифровать</button>
+        <button onclick="decrypt()">Расшифровать</button>
+        
+        <div class="input-group">
+            <label for="outputText">Результат:</label>
+            <textarea id="outputText" readonly></textarea>
+        </div>
+        
+        <h2>Квадрат Полибия</h2>
+        <div id="polybiusSquare"></div>
+        
+        <div class="process-steps" id="processSteps"></div>
     </div>
-    
-    <footer>
-        <p>Исправленная реализация шифра Полибия | Поддерживает любые символы</p>
-    </footer>
 
     <script>
-        let polybiusMap = {};
+        let currentSquare = [];
+        let originalSquare = [];
         
-        // Инициализация квадрата Полибия
-        function initPolybiusSquare() {
-            const alphabetInput = document.getElementById('alphabet').value.trim();
-            const grid = document.getElementById('polybiusGrid');
-            const errorElement = document.getElementById('alphabetError');
-            grid.innerHTML = '';
-            errorElement.textContent = '';
-            polybiusMap = {};
+        // Инициализация квадрата
+        function initSquare() {
+            const alphabet = document.getElementById('alphabet').value.trim();
+            const square = document.getElementById('polybiusSquare');
+            square.innerHTML = '';
             
-            // Проверка длины
-            if (alphabetInput.length !== 25) {
-                errorElement.textContent = 'Ошибка: нужно ровно 25 символов!';
-                return false;
+            // Заголовки столбцов
+            const headerRow = document.createElement('div');
+            headerRow.className = 'square-header';
+            headerRow.textContent = '';
+            square.appendChild(headerRow);
+            
+            for (let col = 1; col <= 5; col++) {
+                const header = document.createElement('div');
+                header.className = 'square-header';
+                header.textContent = col;
+                square.appendChild(header);
             }
             
-            // Проверка уникальности
-            const charSet = new Set(alphabetInput);
-            if (charSet.size !== 25) {
-                errorElement.textContent = 'Ошибка: все символы должны быть уникальными!';
-                return false;
-            }
+            // Заполнение квадрата
+            currentSquare = [];
+            originalSquare = [];
             
-            // Создаем заголовки столбцов
-            for (let col = 0; col <= 5; col++) {
-                const cell = document.createElement('div');
-                cell.className = 'grid-header';
-                if (col === 0) {
-                    cell.textContent = '';
-                } else {
-                    cell.textContent = col;
-                }
-                grid.appendChild(cell);
-            }
-            
-            // Заполняем сетку символами
-            for (let row = 1; row <= 5; row++) {
-                // Заголовок строки
-                const headerCell = document.createElement('div');
-                headerCell.className = 'grid-header';
-                headerCell.textContent = row;
-                grid.appendChild(headerCell);
+            for (let row = 0; row < 5; row++) {
+                const rowHeader = document.createElement('div');
+                rowHeader.className = 'square-header';
+                rowHeader.textContent = row + 1;
+                square.appendChild(rowHeader);
                 
-                // Ячейки с символами
-                for (let col = 1; col <= 5; col++) {
-                    const index = (row-1)*5 + (col-1);
-                    const char = alphabetInput[index];
+                const currentRow = [];
+                const originalRow = [];
+                
+                for (let col = 0; col < 5; col++) {
+                    const index = row * 5 + col;
+                    const char = index < alphabet.length ? alphabet[index] : '?';
                     
                     const cell = document.createElement('div');
-                    cell.className = 'grid-cell';
+                    cell.className = 'square-cell';
                     cell.textContent = char;
-                    cell.dataset.row = row;
-                    cell.dataset.col = col;
-                    cell.dataset.char = char;
-                    cell.title = `Координаты: ${row},${col} | Символ: ${char}`;
-                    grid.appendChild(cell);
+                    cell.dataset.row = row + 1;
+                    cell.dataset.col = col + 1;
+                    square.appendChild(cell);
                     
-                    // Сохраняем в карту для быстрого поиска
-                    polybiusMap[char] = { row, col };
+                    currentRow.push(char);
+                    originalRow.push(char);
                 }
+                
+                currentSquare.push(currentRow);
+                originalSquare.push(originalRow);
             }
-            
-            return true;
         }
         
-        // Шифрование текста
-        function encrypt() {
-            const inputText = document.getElementById('inputText').value;
-            const key = document.getElementById('key').value;
-            let output = '';
-            let stepsHtml = '<div class="step"><strong>Начало шифрования...</strong></div>';
+        // Шифрование с алгоритмом Виженера
+        function encryptVigenere(text, key) {
+            let result = '';
+            const steps = [];
             
-            // Очистка предыдущих выделений
-            clearHighlights();
-            
-            // Инициализация квадрата
-            if (!initPolybiusSquare()) {
-                document.getElementById('outputText').textContent = 'ОШИБКА: проверьте квадрат';
-                return;
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                const keyChar = key[i % key.length];
+                
+                // Находим координаты символа и ключа
+                let charCoords = findCoordinates(char);
+                let keyCoords = findCoordinates(keyChar);
+                
+                if (!charCoords || !keyCoords) {
+                    result += char;
+                    steps.push(`Символ '${char}' или ключ '${keyChar}' не найдены`);
+                    continue;
+                }
+                
+                // Применяем сдвиг
+                const newRow = (charCoords.row + keyCoords.row - 1) % 5;
+                const newCol = (charCoords.col + keyCoords.col - 1) % 5;
+                
+                const newChar = currentSquare[newRow][newCol];
+                result += newChar;
+                
+                steps.push(`'${char}' (${charCoords.row},${charCoords.col}) + '${keyChar}' (${keyCoords.row},${keyCoords.col}) → '${newChar}' (${newRow+1},${newCol+1})`);
             }
             
-            let keyIndex = 0;
-            let keyChar, keyCoords;
-            
-            for (let i = 0; i < inputText.length; i++) {
-                const char = inputText[i];
-                
-                // Пропускаем пробелы
-                if (char === ' ') {
-                    output += ' ';
-                    stepsHtml += `<div class="step">Пробел: сохраняется без изменений</div>`;
-                    continue;
-                }
-                
-                // Ищем символ в квадрате
-                const charCoords = polybiusMap[char];
-                
-                if (!charCoords) {
-                    output += char;
-                    stepsHtml += `<div class="step">Символ <span class="highlight">${char}</span> не найден в квадрате, оставляем без изменений</div>`;
-                    continue;
-                }
-                
-                // Получаем символ ключа
-                keyChar = key[keyIndex % key.length];
-                keyCoords = polybiusMap[keyChar];
-                
-                if (!keyCoords) {
-                    output += char;
-                    stepsHtml += `<div class="step">Символ ключа <span class="highlight">${keyChar}</span> не найден, пропускаем преобразование</div>`;
-                    keyIndex++;
-                    continue;
-                }
-                
-                // Применяем преобразование Виженера
-                const newRow = ((charCoords.row + keyCoords.row - 2) % 5) + 1;
-                const newCol = ((charCoords.col + keyCoords.col - 2) % 5) + 1;
-                
-                // Находим новый символ по координатам
-                const newChar = findCharByCoords(newRow, newCol);
-                
-                if (!newChar) {
-                    output += char;
-                    stepsHtml += `<div class="step">Ошибка: не найдена ячейка для координат (${newRow}, ${newCol})</div>`;
-                    keyIndex++;
-                    continue;
-                }
-                
-                output += newChar;
-                
-                // Визуализация
-                highlightCell(charCoords.row, charCoords.col, 'input');
-                highlightCell(keyCoords.row, keyCoords.col, 'key');
-                highlightCell(newRow, newCol, 'output');
-                
-                // Добавляем шаг в процесс
-                stepsHtml += `<div class="step">
-                    <span class="highlight">${char}</span> (${charCoords.row},${charCoords.col}) + 
-                    <span class="highlight">${keyChar}</span> (${keyCoords.row},${keyCoords.col}) → 
-                    <span class="highlight">${newChar}</span> (${newRow},${newCol})
-                </div>`;
-                
-                keyIndex++;
-            }
-            
-            document.getElementById('outputText').textContent = output;
-            document.getElementById('processSteps').innerHTML = stepsHtml;
+            return { result, steps };
         }
         
-        // Дешифрование текста
-        function decrypt() {
-            const inputText = document.getElementById('inputText').value;
-            const key = document.getElementById('key').value;
-            let output = '';
-            let stepsHtml = '<div class="step"><strong>Начало дешифрования...</strong></div>';
+        // Дешифрование с алгоритмом Виженера
+        function decryptVigenere(text, key) {
+            let result = '';
+            const steps = [];
             
-            // Очистка предыдущих выделений
-            clearHighlights();
-            
-            // Инициализация квадрата
-            if (!initPolybiusSquare()) {
-                document.getElementById('outputText').textContent = 'ОШИБКА: проверьте квадрат';
-                return;
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                const keyChar = key[i % key.length];
+                
+                // Находим координаты символа и ключа
+                let charCoords = findCoordinates(char);
+                let keyCoords = findCoordinates(keyChar);
+                
+                if (!charCoords || !keyCoords) {
+                    result += char;
+                    steps.push(`Символ '${char}' или ключ '${keyChar}' не найдены`);
+                    continue;
+                }
+                
+                // Обратный сдвиг
+                let origRow = (charCoords.row - keyCoords.row + 4) % 5;
+                let origCol = (charCoords.col - keyCoords.col + 4) % 5;
+                
+                const origChar = originalSquare[origRow][origCol];
+                result += origChar;
+                
+                steps.push(`'${char}' (${charCoords.row},${charCoords.col}) - '${keyChar}' (${keyCoords.row},${keyCoords.col}) → '${origChar}' (${origRow+1},${origCol+1})`);
             }
             
-            let keyIndex = 0;
-            let keyChar, keyCoords;
-            
-            for (let i = 0; i < inputText.length; i++) {
-                const char = inputText[i];
-                
-                // Пропускаем пробелы
-                if (char === ' ') {
-                    output += ' ';
-                    stepsHtml += `<div class="step">Пробел: сохраняется без изменений</div>`;
-                    continue;
-                }
-                
-                // Ищем символ в квадрате
-                const charCoords = polybiusMap[char];
-                
-                if (!charCoords) {
-                    output += char;
-                    stepsHtml += `<div class="step">Символ <span class="highlight">${char}</span> не найден в квадрате, оставляем без изменений</div>`;
-                    continue;
-                }
-                
-                // Получаем символ ключа
-                keyChar = key[keyIndex % key.length];
-                keyCoords = polybiusMap[keyChar];
-                
-                if (!keyCoords) {
-                    output += char;
-                    stepsHtml += `<div class="step">Символ ключа <span class="highlight">${keyChar}</span> не найден, пропускаем преобразование</div>`;
-                    keyIndex++;
-                    continue;
-                }
-                
-                // Применяем обратное преобразование
-                const origRow = ((charCoords.row - keyCoords.row + 5) % 5) + 1;
-                const origCol = ((charCoords.col - keyCoords.col + 5) % 5) + 1;
-                
-                // Находим исходный символ по координатам
-                const origChar = findCharByCoords(origRow, origCol);
-                
-                if (!origChar) {
-                    output += char;
-                    stepsHtml += `<div class="step">Ошибка: не найдена ячейка для координат (${origRow}, ${origCol})</div>`;
-                    keyIndex++;
-                    continue;
-                }
-                
-                output += origChar;
-                
-                // Визуализация
-                highlightCell(charCoords.row, charCoords.col, 'input');
-                highlightCell(keyCoords.row, keyCoords.col, 'key');
-                highlightCell(origRow, origCol, 'output');
-                
-                // Добавляем шаг в процесс
-                stepsHtml += `<div class="step">
-                    <span class="highlight">${char}</span> (${charCoords.row},${charCoords.col}) - 
-                    <span class="highlight">${keyChar}</span> (${keyCoords.row},${keyCoords.col}) → 
-                    <span class="highlight">${origChar}</span> (${origRow},${origCol})
-                </div>`;
-                
-                keyIndex++;
-            }
-            
-            document.getElementById('outputText').textContent = output;
-            document.getElementById('processSteps').innerHTML = stepsHtml;
+            return { result, steps };
         }
         
-        // Поиск символа по координатам
-        function findCharByCoords(row, col) {
-            const cells = document.querySelectorAll('.grid-cell');
-            for (const cell of cells) {
-                if (parseInt(cell.dataset.row) === row && 
-                    parseInt(cell.dataset.col) === col) {
-                    return cell.dataset.char;
+        // Поиск координат символа
+        function findCoordinates(char) {
+            for (let row = 0; row < 5; row++) {
+                for (let col = 0; col < 5; col++) {
+                    if (currentSquare[row][col] === char) {
+                        return { row: row + 1, col: col + 1 };
+                    }
                 }
             }
             return null;
         }
         
-        // Подсветка ячейки
-        function highlightCell(row, col, type) {
-            const cells = document.querySelectorAll('.grid-cell');
-            for (const cell of cells) {
-                if (parseInt(cell.dataset.row) === row && 
-                    parseInt(cell.dataset.col) === col) {
-                    cell.classList.add(`active-${type}`);
-                    break;
+        // Применение алгоритма преобразования квадрата
+        function transformSquare(algorithm) {
+            // Сброс к оригинальному квадрату
+            for (let row = 0; row < 5; row++) {
+                for (let col = 0; col < 5; col++) {
+                    currentSquare[row][col] = originalSquare[row][col];
+                }
+            }
+            
+            if (algorithm === 'swap') {
+                // Случайный обмен строк и столбцов
+                for (let i = 0; i < 3; i++) {
+                    const row1 = Math.floor(Math.random() * 5);
+                    const row2 = Math.floor(Math.random() * 5);
+                    [currentSquare[row1], currentSquare[row2]] = [currentSquare[row2], currentSquare[row1]];
+                    
+                    for (let row = 0; row < 5; row++) {
+                        const col1 = Math.floor(Math.random() * 5);
+                        const col2 = Math.floor(Math.random() * 5);
+                        [currentSquare[row][col1], currentSquare[row][col2]] = 
+                        [currentSquare[row][col2], currentSquare[row][col1]];
+                    }
+                }
+            } 
+            else if (algorithm === 'rotate') {
+                // Поворот квадрата
+                const rotated = [[],[],[],[],[]];
+                for (let row = 0; row < 5; row++) {
+                    for (let col = 0; col < 5; col++) {
+                        rotated[4-col][row] = currentSquare[row][col];
+                    }
+                }
+                currentSquare = rotated;
+            }
+            
+            // Обновляем отображение
+            updateSquareView();
+        }
+        
+        // Обновление отображения квадрата
+        function updateSquareView() {
+            const cells = document.querySelectorAll('.square-cell');
+            let index = 0;
+            
+            for (let row = 0; row < 5; row++) {
+                for (let col = 0; col < 5; col++) {
+                    cells[index].textContent = currentSquare[row][col];
+                    index++;
                 }
             }
         }
         
-        // Очистка подсветки
-        function clearHighlights() {
-            const cells = document.querySelectorAll('.grid-cell');
-            cells.forEach(cell => {
-                cell.classList.remove('active-input', 'active-key', 'active-output');
-            });
+        function encrypt() {
+            initSquare();
+            const text = document.getElementById('inputText').value;
+            const key = document.getElementById('key').value;
+            const algorithm = document.getElementById('algorithm').value;
+            
+            transformSquare(algorithm);
+            
+            const { result, steps } = encryptVigenere(text, key);
+            document.getElementById('outputText').value = result;
+            document.getElementById('processSteps').innerHTML = 
+                '<h3>Процесс шифрования:</h3>' + 
+                steps.map(step => `<div>${step}</div>`).join('');
         }
         
-        // Сброс всех полей
-        function resetAll() {
-            document.getElementById('alphabet').value = '%$#=*-<+!?1234567890zzwo';
-            document.getElementById('key').value = 'Секретный ключ';
-            document.getElementById('inputText').value = 'HELLO';
-            document.getElementById('outputText').textContent = '-';
-            document.getElementById('processSteps').innerHTML = '';
-            document.getElementById('alphabetError').textContent = '';
-            clearHighlights();
-            initPolybiusSquare();
+        function decrypt() {
+            initSquare();
+            const text = document.getElementById('inputText').value;
+            const key = document.getElementById('key').value;
+            const algorithm = document.getElementById('algorithm').value;
+            
+            transformSquare(algorithm);
+            
+            const { result, steps } = decryptVigenere(text, key);
+            document.getElementById('outputText').value = result;
+            document.getElementById('processSteps').innerHTML = 
+                '<h3>Процесс дешифрования:</h3>' + 
+                steps.map(step => `<div>${step}</div>`).join('');
         }
         
         // Инициализация при загрузке
-        window.onload = function() {
-            initPolybiusSquare();
-            
-            // Автоматическое обновление квадрата при изменении алфавита
-            document.getElementById('alphabet').addEventListener('input', function() {
-                initPolybiusSquare();
-            });
-        }
+        window.onload = initSquare;
     </script>
 </body>
 </html>
