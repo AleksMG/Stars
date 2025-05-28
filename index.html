@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Усовершенствованный шифр Полибия</title>
+    <title>Улучшенный шифр Полибия</title>
     <style>
         * {
             box-sizing: border-box;
@@ -39,11 +39,6 @@
             color: #ffcc00;
             text-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
         }
-        .subtitle {
-            font-size: 1.2rem;
-            color: #ccc;
-            margin-bottom: 20px;
-        }
         .panel {
             background: rgba(30, 30, 50, 0.8);
             border-radius: 10px;
@@ -57,10 +52,6 @@
             font-size: 1.4rem;
             display: flex;
             align-items: center;
-        }
-        .panel-title i {
-            margin-right: 10px;
-            font-size: 1.2rem;
         }
         .input-group {
             margin-bottom: 20px;
@@ -103,9 +94,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-        button i {
-            margin-right: 8px;
         }
         .encrypt-btn {
             background: linear-gradient(to right, #4CAF50, #2E8B57);
@@ -157,6 +145,7 @@
             align-items: center;
             justify-content: center;
             padding: 10px;
+            height: 50px;
         }
         .grid-cell {
             background: rgba(50, 50, 80, 0.8);
@@ -165,15 +154,27 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
+            font-size: 1.4rem;
             font-weight: bold;
             transition: all 0.3s;
         }
-        .grid-cell.active {
+        .grid-cell.active-input {
             background: #4dccbd;
             color: #000;
             transform: scale(1.1);
             box-shadow: 0 0 15px rgba(77, 204, 189, 0.7);
+        }
+        .grid-cell.active-key {
+            background: #ffcc00;
+            color: #000;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.7);
+        }
+        .grid-cell.active-output {
+            background: #f44336;
+            color: #000;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(244, 67, 54, 0.7);
         }
         .process-steps {
             background: rgba(20, 20, 40, 0.8);
@@ -197,20 +198,33 @@
             margin-top: 20px;
         }
         .result-text {
-            font-size: 1.4rem;
+            font-size: 1.8rem;
             text-align: center;
             padding: 20px;
             background: rgba(0, 0, 0, 0.3);
             border-radius: 8px;
             font-family: monospace;
             letter-spacing: 3px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .highlight {
             color: #ffcc00;
             font-weight: bold;
             background: rgba(255, 204, 0, 0.1);
-            padding: 0 5px;
-            border-radius: 3px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 1.2rem;
+        }
+        .error {
+            color: #ff5555;
+            font-weight: bold;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background: rgba(255, 85, 85, 0.1);
         }
         .explanation {
             margin-top: 20px;
@@ -235,21 +249,25 @@
             .btn-group {
                 flex-direction: column;
             }
+            h1 {
+                font-size: 2rem;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🔐 Усовершенствованный шифр Полибия</h1>
-            <div class="subtitle">Шифрование с использованием координатной системы 5×5</div>
+            <h1>🔐 Улучшенный шифр Полибия</h1>
+            <p>Работает с любыми символами: буквами, цифрами, спецсимволами</p>
         </header>
         
         <div class="panel">
             <div class="panel-title">⚙️ Настройки шифра</div>
             <div class="input-group">
                 <label for="alphabet">Введите 25 уникальных символов для квадрата Полибия:</label>
-                <input type="text" id="alphabet" maxlength="25" value="%$#=*-<+!?1234567890zzwo" placeholder="Например: абвгдеёжзийклмнопрстуфхцчшщ">
+                <input type="text" id="alphabet" maxlength="25" value="%$#=*-<+!?1234567890zzwo" placeholder="Например: %$#=*-<+!?1234567890zzwo">
+                <div class="error" id="alphabetError"></div>
             </div>
             
             <div class="input-group">
@@ -263,9 +281,9 @@
             </div>
             
             <div class="btn-group">
-                <button class="encrypt-btn" onclick="encrypt()"><i>🔒</i> Зашифровать</button>
-                <button class="decrypt-btn" onclick="decrypt()"><i>🔓</i> Расшифровать</button>
-                <button class="reset-btn" onclick="resetAll()"><i>🔄</i> Сбросить</button>
+                <button class="encrypt-btn" onclick="encrypt()">🔒 Зашифровать</button>
+                <button class="decrypt-btn" onclick="decrypt()">🔓 Расшифровать</button>
+                <button class="reset-btn" onclick="resetAll()">🔄 Сбросить</button>
             </div>
         </div>
         
@@ -291,134 +309,168 @@
         
         <div class="result-container">
             <div class="panel-title">📜 Результат</div>
-            <div class="result-text" id="outputText">HELLO</div>
+            <div class="result-text" id="outputText">-</div>
         </div>
         
         <div class="explanation">
-            <h3>📖 Как работает шифр Полибия</h3>
-            <p>Шифр Полибия использует квадратную таблицу 5×5, где каждая буква или символ имеет координаты (ряд, столбец).</p>
-            <p>Для шифрования:</p>
+            <h3>📖 Как это работает</h3>
+            <p>Шифр Полибия использует квадрат 5×5, заполненный произвольными символами. Каждый символ имеет координаты (ряд, столбец).</p>
+            <p>При шифровании:</p>
             <ol>
                 <li>Каждый символ текста заменяется на его координаты в квадрате</li>
-                <li>Координаты преобразуются по определенному алгоритму (в данном случае с использованием ключа)</li>
-                <li>Преобразованные координаты преобразуются обратно в символы из квадрата</li>
+                <li>К координатам добавляется смещение на основе ключа</li>
+                <li>Новые координаты преобразуются обратно в символы</li>
             </ol>
-            <p>В этой реализации дополнительно используется ключ для усиления криптостойкости. Ключ добавляет сдвиг к координатам символов, делая шифр более устойчивым к взлому.</p>
+            <p>Дешифрование работает в обратном порядке. Ключ делает шифр более стойким к взлому.</p>
         </div>
     </div>
     
     <footer>
-        <p>Шифр Полибия | Реализация с визуализацией процесса шифрования</p>
+        <p>Улучшенная реализация шифра Полибия | Поддерживает любые символы</p>
     </footer>
 
     <script>
+        let polybiusMap = {};
+        
         // Инициализация квадрата Полибия
         function initPolybiusSquare() {
             const alphabetInput = document.getElementById('alphabet').value.trim();
             const grid = document.getElementById('polybiusGrid');
+            const errorElement = document.getElementById('alphabetError');
             grid.innerHTML = '';
+            errorElement.textContent = '';
+            polybiusMap = {};
             
-            // Добавляем заголовки строк
-            for (let row = 0; row <= 5; row++) {
-                for (let col = 0; col <= 5; col++) {
+            // Проверка длины
+            if (alphabetInput.length !== 25) {
+                errorElement.textContent = 'Ошибка: нужно ровно 25 символов!';
+                return false;
+            }
+            
+            // Проверка уникальности
+            const charSet = new Set(alphabetInput);
+            if (charSet.size !== 25) {
+                errorElement.textContent = 'Ошибка: все символы должны быть уникальными!';
+                return false;
+            }
+            
+            // Создаем заголовки столбцов
+            for (let col = 0; col <= 5; col++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-header';
+                if (col === 0) {
+                    cell.textContent = '';
+                } else {
+                    cell.textContent = col;
+                }
+                grid.appendChild(cell);
+            }
+            
+            // Заполняем сетку символами
+            for (let row = 1; row <= 5; row++) {
+                // Заголовок строки
+                const headerCell = document.createElement('div');
+                headerCell.className = 'grid-header';
+                headerCell.textContent = row;
+                grid.appendChild(headerCell);
+                
+                // Ячейки с символами
+                for (let col = 1; col <= 5; col++) {
+                    const index = (row-1)*5 + (col-1);
+                    const char = alphabetInput[index];
+                    
                     const cell = document.createElement('div');
                     cell.className = 'grid-cell';
-                    
-                    if (row === 0 && col === 0) {
-                        cell.className = 'grid-header';
-                        cell.textContent = '';
-                    } else if (row === 0) {
-                        cell.className = 'grid-header';
-                        cell.textContent = col;
-                    } else if (col === 0) {
-                        cell.className = 'grid-header';
-                        cell.textContent = row;
-                    } else {
-                        const index = (row-1)*5 + (col-1);
-                        if (index < alphabetInput.length) {
-                            cell.textContent = alphabetInput[index];
-                            cell.dataset.row = row;
-                            cell.dataset.col = col;
-                            cell.dataset.char = alphabetInput[index];
-                        } else {
-                            cell.textContent = '?';
-                        }
-                    }
-                    
+                    cell.textContent = char;
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    cell.dataset.char = char;
+                    cell.title = `Координаты: ${row},${col} | Символ: ${char}`;
                     grid.appendChild(cell);
+                    
+                    // Сохраняем в карту для быстрого поиска
+                    polybiusMap[char] = { row, col };
                 }
             }
+            
+            return true;
         }
         
         // Шифрование текста
         function encrypt() {
-            const alphabetInput = document.getElementById('alphabet').value.trim();
-            const inputText = document.getElementById('inputText').value.toUpperCase();
-            const key = document.getElementById('key').value.toUpperCase();
+            const inputText = document.getElementById('inputText').value;
+            const key = document.getElementById('key').value;
             let output = '';
             let stepsHtml = '<div class="step"><strong>Начало шифрования...</strong></div>';
             
             // Очистка предыдущих выделений
             clearHighlights();
             
-            // Проверка алфавита
-            if (alphabetInput.length !== 25) {
-                stepsHtml += `<div class="step error">Ошибка: в квадрате должно быть ровно 25 символов! (сейчас: ${alphabetInput.length})</div>`;
-                document.getElementById('processSteps').innerHTML = stepsHtml;
-                document.getElementById('outputText').textContent = 'ОШИБКА';
+            // Инициализация квадрата
+            if (!initPolybiusSquare()) {
+                document.getElementById('outputText').textContent = 'ОШИБКА: проверьте квадрат';
                 return;
             }
             
             let keyIndex = 0;
+            let keyChar, keyCoords;
             
             for (let i = 0; i < inputText.length; i++) {
                 const char = inputText[i];
+                
+                // Пропускаем пробелы
                 if (char === ' ') {
                     output += ' ';
                     stepsHtml += `<div class="step">Пробел: сохраняется без изменений</div>`;
                     continue;
                 }
                 
-                // Находим символ в квадрате
-                const charIndex = alphabetInput.indexOf(char);
-                if (charIndex === -1) {
+                // Ищем символ в квадрате
+                const charCoords = polybiusMap[char];
+                
+                if (!charCoords) {
                     output += char;
                     stepsHtml += `<div class="step">Символ <span class="highlight">${char}</span> не найден в квадрате, оставляем без изменений</div>`;
                     continue;
                 }
                 
-                const row = Math.floor(charIndex / 5) + 1;
-                const col = (charIndex % 5) + 1;
-                
                 // Получаем символ ключа
-                const keyChar = key[keyIndex % key.length];
-                const keyCharIndex = alphabetInput.indexOf(keyChar);
-                let keyRow = 0;
-                let keyCol = 0;
+                keyChar = key[keyIndex % key.length];
+                keyCoords = polybiusMap[keyChar];
                 
-                if (keyCharIndex !== -1) {
-                    keyRow = Math.floor(keyCharIndex / 5) + 1;
-                    keyCol = (keyCharIndex % 5) + 1;
+                if (!keyCoords) {
+                    output += char;
+                    stepsHtml += `<div class="step">Символ ключа <span class="highlight">${keyChar}</span> не найден, пропускаем преобразование</div>`;
+                    keyIndex++;
+                    continue;
                 }
                 
-                // Применяем преобразование
-                const newRow = ((row + keyRow - 2) % 5) + 1;
-                const newCol = ((col + keyCol - 2) % 5) + 1;
-                const newCharIndex = (newRow-1)*5 + (newCol-1);
-                const newChar = alphabetInput[newCharIndex];
+                // Применяем преобразование Виженера
+                const newRow = ((charCoords.row + keyCoords.row - 2) % 5) + 1;
+                const newCol = ((charCoords.col + keyCoords.col - 2) % 5) + 1;
+                
+                // Находим новый символ по координатам
+                const newChar = findCharByCoords(newRow, newCol);
+                
+                if (!newChar) {
+                    output += char;
+                    stepsHtml += `<div class="step">Ошибка: не найдена ячейка для координат (${newRow}, ${newCol})</div>`;
+                    keyIndex++;
+                    continue;
+                }
                 
                 output += newChar;
                 
                 // Визуализация
-                highlightCell(row, col, 'input');
-                highlightCell(keyRow, keyCol, 'key');
+                highlightCell(charCoords.row, charCoords.col, 'input');
+                highlightCell(keyCoords.row, keyCoords.col, 'key');
                 highlightCell(newRow, newCol, 'output');
                 
                 // Добавляем шаг в процесс
                 stepsHtml += `<div class="step">
-                    Символ: <span class="highlight">${char}</span> → Координаты: (${row}, ${col})<br>
-                    Ключ: <span class="highlight">${keyChar}</span> → Координаты: (${keyRow}, ${keyCol})<br>
-                    Новые координаты: (${newRow}, ${newCol}) → Символ: <span class="highlight">${newChar}</span>
+                    <span class="highlight">${char}</span> (${charCoords.row},${charCoords.col}) + 
+                    <span class="highlight">${keyChar}</span> (${keyCoords.row},${keyCoords.col}) → 
+                    <span class="highlight">${newChar}</span> (${newRow},${newCol})
                 </div>`;
                 
                 keyIndex++;
@@ -430,73 +482,79 @@
         
         // Дешифрование текста
         function decrypt() {
-            const alphabetInput = document.getElementById('alphabet').value.trim();
             const inputText = document.getElementById('inputText').value;
-            const key = document.getElementById('key').value.toUpperCase();
+            const key = document.getElementById('key').value;
             let output = '';
             let stepsHtml = '<div class="step"><strong>Начало дешифрования...</strong></div>';
             
             // Очистка предыдущих выделений
             clearHighlights();
             
-            // Проверка алфавита
-            if (alphabetInput.length !== 25) {
-                stepsHtml += `<div class="step error">Ошибка: в квадрате должно быть ровно 25 символов! (сейчас: ${alphabetInput.length})</div>`;
-                document.getElementById('processSteps').innerHTML = stepsHtml;
-                document.getElementById('outputText').textContent = 'ОШИБКА';
+            // Инициализация квадрата
+            if (!initPolybiusSquare()) {
+                document.getElementById('outputText').textContent = 'ОШИБКА: проверьте квадрат';
                 return;
             }
             
             let keyIndex = 0;
+            let keyChar, keyCoords;
             
             for (let i = 0; i < inputText.length; i++) {
                 const char = inputText[i];
+                
+                // Пропускаем пробелы
                 if (char === ' ') {
                     output += ' ';
                     stepsHtml += `<div class="step">Пробел: сохраняется без изменений</div>`;
                     continue;
                 }
                 
-                // Находим символ в квадрате
-                const charIndex = alphabetInput.indexOf(char);
-                if (charIndex === -1) {
+                // Ищем символ в квадрате
+                const charCoords = polybiusMap[char];
+                
+                if (!charCoords) {
                     output += char;
                     stepsHtml += `<div class="step">Символ <span class="highlight">${char}</span> не найден в квадрате, оставляем без изменений</div>`;
                     continue;
                 }
                 
-                const row = Math.floor(charIndex / 5) + 1;
-                const col = (charIndex % 5) + 1;
-                
                 // Получаем символ ключа
-                const keyChar = key[keyIndex % key.length];
-                const keyCharIndex = alphabetInput.indexOf(keyChar);
-                let keyRow = 0;
-                let keyCol = 0;
+                keyChar = key[keyIndex % key.length];
+                keyCoords = polybiusMap[keyChar];
                 
-                if (keyCharIndex !== -1) {
-                    keyRow = Math.floor(keyCharIndex / 5) + 1;
-                    keyCol = (keyCharIndex % 5) + 1;
+                if (!keyCoords) {
+                    output += char;
+                    stepsHtml += `<div class="step">Символ ключа <span class="highlight">${keyChar}</span> не найден, пропускаем преобразование</div>`;
+                    keyIndex++;
+                    continue;
                 }
                 
                 // Применяем обратное преобразование
-                const origRow = ((row - keyRow + 3) % 5) + 1;
-                const origCol = ((col - keyCol + 3) % 5) + 1;
-                const origCharIndex = (origRow-1)*5 + (origCol-1);
-                const origChar = alphabetInput[origCharIndex];
+                const origRow = ((charCoords.row - keyCoords.row + 5) % 5) + 1;
+                const origCol = ((charCoords.col - keyCoords.col + 5) % 5) + 1;
+                
+                // Находим исходный символ по координатам
+                const origChar = findCharByCoords(origRow, origCol);
+                
+                if (!origChar) {
+                    output += char;
+                    stepsHtml += `<div class="step">Ошибка: не найдена ячейка для координат (${origRow}, ${origCol})</div>`;
+                    keyIndex++;
+                    continue;
+                }
                 
                 output += origChar;
                 
                 // Визуализация
-                highlightCell(row, col, 'input');
-                highlightCell(keyRow, keyCol, 'key');
+                highlightCell(charCoords.row, charCoords.col, 'input');
+                highlightCell(keyCoords.row, keyCoords.col, 'key');
                 highlightCell(origRow, origCol, 'output');
                 
                 // Добавляем шаг в процесс
                 stepsHtml += `<div class="step">
-                    Символ: <span class="highlight">${char}</span> → Координаты: (${row}, ${col})<br>
-                    Ключ: <span class="highlight">${keyChar}</span> → Координаты: (${keyRow}, ${keyCol})<br>
-                    Исходные координаты: (${origRow}, ${origCol}) → Символ: <span class="highlight">${origChar}</span>
+                    <span class="highlight">${char}</span> (${charCoords.row},${charCoords.col}) - 
+                    <span class="highlight">${keyChar}</span> (${keyCoords.row},${keyCoords.col}) → 
+                    <span class="highlight">${origChar}</span> (${origRow},${origCol})
                 </div>`;
                 
                 keyIndex++;
@@ -506,22 +564,26 @@
             document.getElementById('processSteps').innerHTML = stepsHtml;
         }
         
+        // Поиск символа по координатам
+        function findCharByCoords(row, col) {
+            const cells = document.querySelectorAll('.grid-cell');
+            for (const cell of cells) {
+                if (parseInt(cell.dataset.row) === row && 
+                    parseInt(cell.dataset.col) === col) {
+                    return cell.dataset.char;
+                }
+            }
+            return null;
+        }
+        
         // Подсветка ячейки
         function highlightCell(row, col, type) {
-            if (row < 1 || row > 5 || col < 1 || col > 5) return;
-            
             const cells = document.querySelectorAll('.grid-cell');
-            const index = (row * 6) + col;
-            if (index < cells.length) {
-                cells[index].classList.add('active');
-                
-                // Добавляем класс в зависимости от типа
-                if (type === 'input') {
-                    cells[index].classList.add('input-cell');
-                } else if (type === 'key') {
-                    cells[index].classList.add('key-cell');
-                } else if (type === 'output') {
-                    cells[index].classList.add('output-cell');
+            for (const cell of cells) {
+                if (parseInt(cell.dataset.row) === row && 
+                    parseInt(cell.dataset.col) === col) {
+                    cell.classList.add(`active-${type}`);
+                    break;
                 }
             }
         }
@@ -530,17 +592,18 @@
         function clearHighlights() {
             const cells = document.querySelectorAll('.grid-cell');
             cells.forEach(cell => {
-                cell.classList.remove('active', 'input-cell', 'key-cell', 'output-cell');
+                cell.classList.remove('active-input', 'active-key', 'active-output');
             });
         }
         
         // Сброс всех полей
         function resetAll() {
-            document.getElementById('alphabet').value = 'абвгдеёжзийклмнопрстуфхцчшщ';
-            document.getElementById('key').value = '';
-            document.getElementById('inputText').value = '';
-            document.getElementById('outputText').textContent = '';
+            document.getElementById('alphabet').value = '%$#=*-<+!?1234567890zzwo';
+            document.getElementById('key').value = 'Секретный ключ';
+            document.getElementById('inputText').value = 'HELLO';
+            document.getElementById('outputText').textContent = '-';
             document.getElementById('processSteps').innerHTML = '';
+            document.getElementById('alphabetError').textContent = '';
             clearHighlights();
             initPolybiusSquare();
         }
@@ -549,8 +612,10 @@
         window.onload = function() {
             initPolybiusSquare();
             
-            // Добавляем обработчики для демонстрации
-            document.getElementById('alphabet').addEventListener('input', initPolybiusSquare);
+            // Автоматическое обновление квадрата при изменении алфавита
+            document.getElementById('alphabet').addEventListener('input', function() {
+                initPolybiusSquare();
+            });
         }
     </script>
 </body>
