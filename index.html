@@ -1,343 +1,221 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Черная дыра с релятивистским вращением</title>
+    <title>Шифр Полибия с кастомными символами</title>
     <style>
         body {
-            margin: 0;
-            overflow: hidden;
-            background-color: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            perspective: 1000px;
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
         }
-        
-        .universe {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            transform-style: preserve-3d;
-        }
-        
-        .black-hole-system {
-            position: absolute;
-            width: 600px;
-            height: 600px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-        
-        .black-hole {
-            position: absolute;
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            background: radial-gradient(circle at center, 
-                #000 0%, 
-                #000 60%, 
-                rgba(20, 20, 30, 0.8) 80%,
-                transparent 100%);
-            box-shadow: 0 0 80px rgba(0, 50, 100, 0.5);
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 20;
-        }
-        
-        .event-horizon {
-            position: absolute;
-            width: 202px;
-            height: 202px;
-            border-radius: 50%;
-            background: radial-gradient(circle at center, 
-                transparent 0%, 
-                rgba(0, 0, 0, 0.1) 60%, 
-                rgba(0, 0, 0, 0.8) 90%);
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 15;
-            filter: blur(1px);
-        }
-        
-        .photon-sphere {
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            border-radius: 50%;
-            background: radial-gradient(circle at center, 
-                transparent 0%, 
-                rgba(255, 255, 200, 0.05) 40%, 
-                rgba(255, 255, 150, 0.2) 48%,
-                rgba(255, 255, 100, 0.4) 49%,
-                rgba(255, 255, 150, 0.2) 50%,
-                transparent 55%);
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 10;
-            animation: photon-pulse 5s infinite alternate;
-        }
-        
-        .accretion-disk {
-            position: absolute;
-            width: 500px;
-            height: 100px;
-            background: linear-gradient(90deg, 
-                rgba(0,0,0,0) 0%, 
-                rgba(255,50,0,0.8) 20%, 
-                rgba(255,255,50,0.9) 50%, 
-                rgba(255,50,0,0.8) 80%, 
-                rgba(0,0,0,0) 100%);
-            border-radius: 50%;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotateX(80deg);
-            z-index: 5;
-            animation: rotate-disk-outer 15s linear infinite;
-            filter: blur(1px);
-            opacity: 0.9;
-        }
-        
-        .accretion-disk-middle {
-            position: absolute;
-            width: 400px;
-            height: 80px;
-            background: linear-gradient(90deg, 
-                rgba(0,0,0,0) 0%, 
-                rgba(255,30,0,0.9) 20%, 
-                rgba(255,255,30,1) 50%, 
-                rgba(255,30,0,0.9) 80%, 
-                rgba(0,0,0,0) 100%);
-            border-radius: 50%;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotateX(80deg);
-            z-index: 6;
-            animation: rotate-disk-middle 7.5s linear infinite;
-            filter: blur(0.8px);
-            opacity: 0.95;
-        }
-        
-        .accretion-disk-inner {
-            position: absolute;
-            width: 300px;
-            height: 60px;
-            background: linear-gradient(90deg, 
-                rgba(0,0,0,0) 0%, 
-                rgba(255,0,0,1) 20%, 
-                rgba(255,255,0,1) 50%, 
-                rgba(255,0,0,1) 80%, 
-                rgba(0,0,0,0) 100%);
-            border-radius: 50%;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotateX(80deg);
-            z-index: 7;
-            animation: rotate-disk-inner 3.75s linear infinite;
-            filter: blur(0.5px);
-            opacity: 1;
-        }
-        
-        .jet {
-            position: absolute;
-            width: 20px;
-            height: 600px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 3;
-            filter: blur(8px);
-        }
-        
-        .jet-top {
-            background: linear-gradient(to top, 
-                rgba(0,0,0,0) 0%, 
-                rgba(100,150,255,0.2) 10%, 
-                rgba(150,200,255,0.6) 30%, 
-                rgba(200,220,255,0.8) 50%, 
-                rgba(150,200,255,0.6) 70%, 
-                rgba(100,150,255,0.2) 90%, 
-                rgba(0,0,0,0) 100%);
-            top: -550px;
-            animation: jet-top-pulse 3s infinite ease-in-out;
-        }
-        
-        .jet-bottom {
-            background: linear-gradient(to bottom, 
-                rgba(0,0,0,0) 0%, 
-                rgba(100,150,255,0.2) 10%, 
-                rgba(150,200,255,0.6) 30%, 
-                rgba(200,220,255,0.8) 50%, 
-                rgba(150,200,255,0.6) 70%, 
-                rgba(100,150,255,0.2) 90%, 
-                rgba(0,0,0,0) 100%);
-            bottom: -550px;
-            animation: jet-bottom-pulse 3s infinite 1.5s ease-in-out;
-        }
-        
-        .star {
-            position: absolute;
-            width: 1px;
-            height: 1px;
+        .container {
             background-color: white;
-            border-radius: 50%;
-            z-index: 0;
-            transform-style: preserve-3d;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        
-        @keyframes rotate-disk-outer {
-            from { transform: translate(-50%, -50%) rotateX(80deg) rotateZ(0deg); }
-            to { transform: translate(-50%, -50%) rotateX(80deg) rotateZ(360deg); }
+        h1, h2 {
+            color: #333;
         }
-        
-        @keyframes rotate-disk-middle {
-            from { transform: translate(-50%, -50%) rotateX(80deg) rotateZ(0deg); }
-            to { transform: translate(-50%, -50%) rotateX(80deg) rotateZ(720deg); }
+        .input-group {
+            margin-bottom: 15px;
         }
-        
-        @keyframes rotate-disk-inner {
-            from { transform: translate(-50%, -50%) rotateX(80deg) rotateZ(0deg); }
-            to { transform: translate(-50%, -50%) rotateX(80deg) rotateZ(1440deg); }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
         }
-        
-        @keyframes jet-top-pulse {
-            0%, 100% { height: 600px; opacity: 0.7; transform: translateX(-50%) scaleX(0.8); }
-            50% { height: 800px; opacity: 1; transform: translateX(-50%) scaleX(1.2); }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
         }
-        
-        @keyframes jet-bottom-pulse {
-            0%, 100% { height: 600px; opacity: 0.7; transform: translateX(-50%) scaleX(0.8); }
-            50% { height: 800px; opacity: 1; transform: translateX(-50%) scaleX(1.2); }
+        textarea {
+            height: 100px;
+            font-family: monospace;
         }
-        
-        @keyframes photon-pulse {
-            from { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
-            to { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
         }
-        
-        @keyframes star-twinkle {
-            0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.8; }
-            50% { transform: translate3d(0, 0, 0) scale(1.5); opacity: 1; }
+        button:hover {
+            background-color: #45a049;
         }
-        
-        @keyframes star-drift {
-            0% { transform: translate3d(var(--start-x), var(--start-y), var(--start-z)) scale(1); }
-            100% { transform: translate3d(var(--end-x), var(--end-y), var(--end-z)) scale(0.5); }
+        #polybiusSquare {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            margin: 20px 0;
+        }
+        .square-cell {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+            background-color: #f9f9f9;
+            font-weight: bold;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+            margin: 10px 0;
         }
     </style>
 </head>
 <body>
-    <div class="universe" id="universe">
-        <div class="black-hole-system">
-            <div class="photon-sphere"></div>
-            <div class="accretion-disk"></div>
-            <div class="accretion-disk-middle"></div>
-            <div class="accretion-disk-inner"></div>
-            <div class="event-horizon"></div>
-            <div class="black-hole"></div>
-            <div class="jet jet-top"></div>
-            <div class="jet jet-bottom"></div>
+    <div class="container">
+        <h1>Кастомный шифр Полибия</h1>
+        
+        <div class="input-group">
+            <label for="alphabet">Введите 25 уникальных символов для заполнения квадрата:</label>
+            <input type="text" id="alphabet" maxlength="25" 
+                   placeholder="Например: абвгдеёжзийклмнопрстуфхцчшщ">
         </div>
+        
+        <div class="input-group">
+            <label for="key">Ключ шифрования (опционально):</label>
+            <input type="text" id="key" placeholder="Секретный ключ">
+        </div>
+        
+        <div class="input-group">
+            <label for="inputText">Исходный текст:</label>
+            <textarea id="inputText" placeholder="Введите текст для шифрования"></textarea>
+        </div>
+        
+        <button onclick="encrypt()">Зашифровать</button>
+        <button onclick="decrypt()">Расшифровать</button>
+        
+        <div class="input-group">
+            <label for="outputText">Результат:</label>
+            <textarea id="outputText" readonly></textarea>
+        </div>
+        
+        <h2>Квадрат Полибия (5x5):</h2>
+        <div id="polybiusSquare"></div>
+        <div id="error" class="error"></div>
     </div>
 
     <script>
-        // Create realistic starfield with 3D positions
-        const universe = document.getElementById('universe');
-        const starCount = 500;
+        let polybiusTable = [];
+        let charMap = {};
         
-        for (let i = 0; i < starCount; i++) {
-            const star = document.createElement('div');
-            star.className = 'star';
+        // Инициализация квадрата Полибия
+        function initPolybiusSquare() {
+            const alphabetInput = document.getElementById('alphabet').value.trim();
+            const errorElement = document.getElementById('error');
+            const squareElement = document.getElementById('polybiusSquare');
             
-            // Random 3D position
-            const x = Math.random() * 2000 - 1000;
-            const y = Math.random() * 2000 - 1000;
-            const z = Math.random() * 2000 - 1000;
+            errorElement.textContent = "";
+            squareElement.innerHTML = "";
             
-            // Set initial position
-            star.style.left = '50%';
-            star.style.top = '50%';
-            star.style.setProperty('--start-x', `${x}px`);
-            star.style.setProperty('--start-y', `${y}px`);
-            star.style.setProperty('--start-z', `${z}px`);
+            // Проверка ввода
+            if (alphabetInput.length !== 25) {
+                errorElement.textContent = 'Ошибка: нужно ровно 25 символов!';
+                return false;
+            }
             
-            // Calculate drifted position (gravitational lensing effect)
-            const dx = x * (1 + Math.random() * 0.2);
-            const dy = y * (1 + Math.random() * 0.2);
-            const dz = z * (1 + Math.random() * 0.2);
+            // Проверка на уникальность символов
+            const charSet = new Set(alphabetInput);
+            if (charSet.size !== 25) {
+                errorElement.textContent = 'Ошибка: все символы должны быть уникальными!';
+                return false;
+            }
             
-            star.style.setProperty('--end-x', `${dx}px`);
-            star.style.setProperty('--end-y', `${dy}px`);
-            star.style.setProperty('--end-z', `${dz}px`);
+            // Строим таблицу 5x5
+            polybiusTable = [];
+            charMap = {};
+            let index = 0;
             
-            // Random star properties
-            const size = Math.random() * 2 + 0.5;
-            const opacity = Math.random() * 0.8 + 0.2;
-            const twinkleSpeed = Math.random() * 10 + 5;
-            const driftSpeed = Math.random() * 30 + 10;
+            for (let row = 0; row < 5; row++) {
+                const rowData = [];
+                for (let col = 0; col < 5; col++) {
+                    const char = alphabetInput[index++];
+                    rowData.push(char);
+                    charMap[char] = { row, col };
+                    
+                    // Добавляем ячейку в визуальное представление
+                    const cell = document.createElement('div');
+                    cell.className = 'square-cell';
+                    cell.textContent = char;
+                    cell.title = `Координаты: ${row},${col}`;
+                    squareElement.appendChild(cell);
+                }
+                polybiusTable.push(rowData);
+            }
             
-            star.style.width = `${size}px`;
-            star.style.height = `${size}px`;
-            star.style.opacity = opacity;
-            star.style.animation = `
-                star-twinkle ${twinkleSpeed}s infinite ease-in-out,
-                star-drift ${driftSpeed}s infinite alternate ease-in-out
-            `;
-            
-            universe.appendChild(star);
+            return true;
         }
 
-        // Doppler effect for relativistic speeds (90% speed of light)
-        function updateDopplerEffect() {
-            const time = Date.now() / 1000;
-            const outerAngle = (time / 15) * Math.PI * 2;
-            const middleAngle = (time / 7.5) * Math.PI * 2;
-            const innerAngle = (time / 3.75) * Math.PI * 2;
+        // Шифрование с использованием ключа в стиле Виженера
+        function processText(isEncrypt) {
+            if (!initPolybiusSquare()) return;
             
-            // Calculate relativistic Doppler factors (v = 0.9c)
-            const outerBlueshift = 1 + 0.9 * Math.sin(outerAngle);
-            const outerRedshift = 1 - 0.9 * Math.sin(outerAngle);
+            const inputText = document.getElementById('inputText').value;
+            const key = document.getElementById('key').value.trim() || polybiusTable[0][0];
+            let output = '';
+            let keyIndex = 0;
             
-            const middleBlueshift = 1 + 0.9 * Math.sin(middleAngle);
-            const middleRedshift = 1 - 0.9 * Math.sin(middleAngle);
+            for (let char of inputText) {
+                // Игнорируем пробелы
+                if (char === ' ') {
+                    output += ' ';
+                    continue;
+                }
+                
+                // Получаем координаты символа
+                const coords = charMap[char.toLowerCase()];
+                if (!coords) {
+                    output += char;
+                    continue;
+                }
+                
+                // Получаем координаты ключа
+                const keyChar = key[keyIndex % key.length].toLowerCase();
+                const keyCoords = charMap[keyChar];
+                if (!keyCoords) continue;
+                
+                // Применяем преобразование Виженера
+                let newRow, newCol;
+                
+                if (isEncrypt) {
+                    // Шифрование: сдвиг вперед
+                    newRow = (coords.row + keyCoords.row) % 5;
+                    newCol = (coords.col + keyCoords.col) % 5;
+                } else {
+                    // Дешифрование: сдвиг назад
+                    newRow = (coords.row - keyCoords.row + 5) % 5;
+                    newCol = (coords.col - keyCoords.col + 5) % 5;
+                }
+                
+                // Добавляем новый символ
+                output += polybiusTable[newRow][newCol];
+                keyIndex++;
+            }
             
-            const innerBlueshift = 1 + 0.9 * Math.sin(innerAngle);
-            const innerRedshift = 1 - 0.9 * Math.sin(innerAngle);
-            
-            // Apply to accretion disks
-            document.querySelector('.accretion-disk').style.background = `
-                linear-gradient(90deg, 
-                    rgba(0,0,0,0) 0%, 
-                    rgba(255,${50 * outerRedshift},${30 * outerRedshift},${0.8 * outerRedshift}) 20%, 
-                    rgba(255,255,${50 * outerBlueshift},${0.9 * outerBlueshift}) 50%, 
-                    rgba(255,${50 * outerRedshift},${30 * outerRedshift},${0.8 * outerRedshift}) 80%, 
-                    rgba(0,0,0,0) 100%)`;
-                    
-            document.querySelector('.accretion-disk-middle').style.background = `
-                linear-gradient(90deg, 
-                    rgba(0,0,0,0) 0%, 
-                    rgba(255,${30 * middleRedshift},${20 * middleRedshift},${0.9 * middleRedshift}) 20%, 
-                    rgba(255,255,${30 * middleBlueshift},${1 * middleBlueshift}) 50%, 
-                    rgba(255,${30 * middleRedshift},${20 * middleRedshift},${0.9 * middleRedshift}) 80%, 
-                    rgba(0,0,0,0) 100%)`;
-                    
-            document.querySelector('.accretion-disk-inner').style.background = `
-                linear-gradient(90deg, 
-                    rgba(0,0,0,0) 0%, 
-                    rgba(255,${20 * innerRedshift},${10 * innerRedshift},${1 * innerRedshift}) 20%, 
-                    rgba(255,255,${20 * innerBlueshift},${1 * innerBlueshift}) 50%, 
-                    rgba(255,${20 * innerRedshift},${10 * innerRedshift},${1 * innerRedshift}) 80%, 
-                    rgba(0,0,0,0) 100%)`;
-            
-            requestAnimationFrame(updateDopplerEffect);
+            document.getElementById('outputText').value = output;
         }
-        
-        updateDopplerEffect();
+
+        function encrypt() {
+            processText(true);
+        }
+
+        function decrypt() {
+            processText(false);
+        }
+
+        // Пример заполнения по умолчанию
+        document.getElementById('alphabet').value = 'абвгдеёжзийклмнопрстуфхцчшщ';
+        initPolybiusSquare();
     </script>
 </body>
 </html>
