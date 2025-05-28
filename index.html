@@ -1,279 +1,343 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>AI Vigenère Cracker PRO</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/universal-sentence-encoder@1.3.2"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Черная дыра с релятивистским вращением</title>
     <style>
-        body { font-family: 'Courier New', monospace; background: #0f0f23; color: #00ff00; }
-        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
-        textarea { 
-            width: 100%; height: 150px; background: #000020; color: #00ff00; 
-            border: 1px solid #005500; padding: 10px; font-family: inherit;
-            margin-bottom: 10px;
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            perspective: 1000px;
         }
-        button {
-            background: #003300; color: #00ff00; border: 1px solid #005500; 
-            padding: 10px 15px; margin: 5px; cursor: pointer; font-family: inherit;
+        
+        .universe {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            transform-style: preserve-3d;
         }
-        #output { 
-            background: #000020; padding: 15px; margin-top: 20px; 
-            border: 1px solid #005500; white-space: pre-wrap;
-            min-height: 100px;
+        
+        .black-hole-system {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
-        .progress-container {
-            margin: 15px 0; border: 1px solid #005500; height: 10px;
+        
+        .black-hole {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle at center, 
+                #000 0%, 
+                #000 60%, 
+                rgba(20, 20, 30, 0.8) 80%,
+                transparent 100%);
+            box-shadow: 0 0 80px rgba(0, 50, 100, 0.5);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
         }
-        .progress-bar { 
-            height: 100%; background: #00ff00; width: 0%; 
-            transition: width 0.3s;
+        
+        .event-horizon {
+            position: absolute;
+            width: 202px;
+            height: 202px;
+            border-radius: 50%;
+            background: radial-gradient(circle at center, 
+                transparent 0%, 
+                rgba(0, 0, 0, 0.1) 60%, 
+                rgba(0, 0, 0, 0.8) 90%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 15;
+            filter: blur(1px);
         }
-        .status-line {
-            display: flex; justify-content: space-between;
-            margin: 10px 0; color: #ffff00;
+        
+        .photon-sphere {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle at center, 
+                transparent 0%, 
+                rgba(255, 255, 200, 0.05) 40%, 
+                rgba(255, 255, 150, 0.2) 48%,
+                rgba(255, 255, 100, 0.4) 49%,
+                rgba(255, 255, 150, 0.2) 50%,
+                transparent 55%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            animation: photon-pulse 5s infinite alternate;
         }
-        .ai-feedback {
-            color: #00ffff; margin: 10px 0; padding: 10px;
-            border-left: 3px solid #00ffff;
+        
+        .accretion-disk {
+            position: absolute;
+            width: 500px;
+            height: 100px;
+            background: linear-gradient(90deg, 
+                rgba(0,0,0,0) 0%, 
+                rgba(255,50,0,0.8) 20%, 
+                rgba(255,255,50,0.9) 50%, 
+                rgba(255,50,0,0.8) 80%, 
+                rgba(0,0,0,0) 100%);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotateX(80deg);
+            z-index: 5;
+            animation: rotate-disk-outer 15s linear infinite;
+            filter: blur(1px);
+            opacity: 0.9;
+        }
+        
+        .accretion-disk-middle {
+            position: absolute;
+            width: 400px;
+            height: 80px;
+            background: linear-gradient(90deg, 
+                rgba(0,0,0,0) 0%, 
+                rgba(255,30,0,0.9) 20%, 
+                rgba(255,255,30,1) 50%, 
+                rgba(255,30,0,0.9) 80%, 
+                rgba(0,0,0,0) 100%);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotateX(80deg);
+            z-index: 6;
+            animation: rotate-disk-middle 7.5s linear infinite;
+            filter: blur(0.8px);
+            opacity: 0.95;
+        }
+        
+        .accretion-disk-inner {
+            position: absolute;
+            width: 300px;
+            height: 60px;
+            background: linear-gradient(90deg, 
+                rgba(0,0,0,0) 0%, 
+                rgba(255,0,0,1) 20%, 
+                rgba(255,255,0,1) 50%, 
+                rgba(255,0,0,1) 80%, 
+                rgba(0,0,0,0) 100%);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotateX(80deg);
+            z-index: 7;
+            animation: rotate-disk-inner 3.75s linear infinite;
+            filter: blur(0.5px);
+            opacity: 1;
+        }
+        
+        .jet {
+            position: absolute;
+            width: 20px;
+            height: 600px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3;
+            filter: blur(8px);
+        }
+        
+        .jet-top {
+            background: linear-gradient(to top, 
+                rgba(0,0,0,0) 0%, 
+                rgba(100,150,255,0.2) 10%, 
+                rgba(150,200,255,0.6) 30%, 
+                rgba(200,220,255,0.8) 50%, 
+                rgba(150,200,255,0.6) 70%, 
+                rgba(100,150,255,0.2) 90%, 
+                rgba(0,0,0,0) 100%);
+            top: -550px;
+            animation: jet-top-pulse 3s infinite ease-in-out;
+        }
+        
+        .jet-bottom {
+            background: linear-gradient(to bottom, 
+                rgba(0,0,0,0) 0%, 
+                rgba(100,150,255,0.2) 10%, 
+                rgba(150,200,255,0.6) 30%, 
+                rgba(200,220,255,0.8) 50%, 
+                rgba(150,200,255,0.6) 70%, 
+                rgba(100,150,255,0.2) 90%, 
+                rgba(0,0,0,0) 100%);
+            bottom: -550px;
+            animation: jet-bottom-pulse 3s infinite 1.5s ease-in-out;
+        }
+        
+        .star {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            background-color: white;
+            border-radius: 50%;
+            z-index: 0;
+            transform-style: preserve-3d;
+        }
+        
+        @keyframes rotate-disk-outer {
+            from { transform: translate(-50%, -50%) rotateX(80deg) rotateZ(0deg); }
+            to { transform: translate(-50%, -50%) rotateX(80deg) rotateZ(360deg); }
+        }
+        
+        @keyframes rotate-disk-middle {
+            from { transform: translate(-50%, -50%) rotateX(80deg) rotateZ(0deg); }
+            to { transform: translate(-50%, -50%) rotateX(80deg) rotateZ(720deg); }
+        }
+        
+        @keyframes rotate-disk-inner {
+            from { transform: translate(-50%, -50%) rotateX(80deg) rotateZ(0deg); }
+            to { transform: translate(-50%, -50%) rotateX(80deg) rotateZ(1440deg); }
+        }
+        
+        @keyframes jet-top-pulse {
+            0%, 100% { height: 600px; opacity: 0.7; transform: translateX(-50%) scaleX(0.8); }
+            50% { height: 800px; opacity: 1; transform: translateX(-50%) scaleX(1.2); }
+        }
+        
+        @keyframes jet-bottom-pulse {
+            0%, 100% { height: 600px; opacity: 0.7; transform: translateX(-50%) scaleX(0.8); }
+            50% { height: 800px; opacity: 1; transform: translateX(-50%) scaleX(1.2); }
+        }
+        
+        @keyframes photon-pulse {
+            from { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+        }
+        
+        @keyframes star-twinkle {
+            0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.8; }
+            50% { transform: translate3d(0, 0, 0) scale(1.5); opacity: 1; }
+        }
+        
+        @keyframes star-drift {
+            0% { transform: translate3d(var(--start-x), var(--start-y), var(--start-z)) scale(1); }
+            100% { transform: translate3d(var(--end-x), var(--end-y), var(--end-z)) scale(0.5); }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🔐 AI Vigenère Cracker PRO</h1>
-        <div class="status-line">
-            <span id="model-status">[ ] Loading AI models...</span>
-            <span id="workers-status">[ ] Workers: 0 active</span>
+    <div class="universe" id="universe">
+        <div class="black-hole-system">
+            <div class="photon-sphere"></div>
+            <div class="accretion-disk"></div>
+            <div class="accretion-disk-middle"></div>
+            <div class="accretion-disk-inner"></div>
+            <div class="event-horizon"></div>
+            <div class="black-hole"></div>
+            <div class="jet jet-top"></div>
+            <div class="jet jet-bottom"></div>
         </div>
-        
-        <textarea id="ciphertext" placeholder="Enter Vigenère-encrypted text here..."></textarea>
-        
-        <div>
-            <button onclick="startAttack()">🚀 START AI ATTACK</button>
-            <button onclick="stopAttack()" style="background:#330000;">🛑 STOP</button>
-            <button onclick="showSettings()">⚙️ SETTINGS</button>
-        </div>
-        
-        <div class="progress-container">
-            <div class="progress-bar" id="progress-bar"></div>
-        </div>
-        
-        <div id="ai-feedback" class="ai-feedback">[AI] System ready</div>
-        <div id="output"></div>
     </div>
 
     <script>
-        // ======================
-        // AI CORE SYSTEM
-        // ======================
-        const AICracker = {
-            models: {
-                keyPredictor: null,
-                languageModel: null,
-                encoder: null
-            },
-            state: {
-                isRunning: false,
-                bestResult: null,
-                iterations: 0
-            },
-            
-            async init() {
-                logOutput("[SYSTEM] Initializing AI engine...");
-                updateAIFeedback("Loading neural networks...");
-                
-                try {
-                    // Загрузка модели для предсказания ключей
-                    this.models.keyPredictor = await tf.loadGraphModel(
-                        'https://storage.googleapis.com/ai-crypto-models/key-predictor/model.json'
-                    );
-                    
-                    // Универсальный энкодер текста
-                    this.models.encoder = await use.load();
-                    
-                    // Языковая модель для оценки результатов
-                    this.models.languageModel = await tf.loadLayersModel(
-                        'https://storage.googleapis.com/ai-crypto-models/language-model/model.json'
-                    );
-                    
-                    document.getElementById('model-status').textContent = "[✓] AI models loaded";
-                    logOutput("[SYSTEM] AI initialization complete");
-                    updateAIFeedback("Neural networks ready");
-                    return true;
-                } catch (error) {
-                    document.getElementById('model-status').textContent = "[×] AI load failed";
-                    logOutput(`[ERROR] AI init failed: ${error.message}`);
-                    updateAIFeedback("Failed to load AI components");
-                    return false;
-                }
-            },
-            
-            async predictKeys(ciphertext, context = {}) {
-                if (!this.models.keyPredictor) return [];
-                
-                const input = this.prepareInput(ciphertext, context);
-                const output = await this.models.keyPredictor.executeAsync(input);
-                const keys = await this.processOutput(output);
-                return keys;
-            },
-            
-            prepareInput(text, context) {
-                // Конвертация текста в числовые векторы
-                const encoded = this.textToVector(text);
-                const constraints = tf.tensor1d([
-                    context.minKeyLength || 1,
-                    context.maxKeyLength || 20
-                ]);
-                
-                return {
-                    'ciphertext_input': tf.tensor2d([encoded]),
-                    'constraints_input': constraints
-                };
-            },
-            
-            async scoreText(text) {
-                // Оценка "английскости" текста
-                const embedding = await this.models.encoder.embed([text]);
-                const prediction = await this.models.languageModel.predict(embedding).data();
-                return prediction[0];
-            }
-        };
-
-        // ======================
-        // WORKER MANAGEMENT
-        // ======================
-        const WorkerManager = {
-            workers: [],
-            activeWorkers: 0,
-            taskQueue: [],
-            
-            init(count = 4) {
-                for (let i = 0; i < count; i++) {
-                    const worker = new Worker('worker.js');
-                    worker.id = i;
-                    worker.busy = false;
-                    worker.onmessage = this.handleWorkerMessage;
-                    this.workers.push(worker);
-                }
-                updateWorkerStatus();
-            },
-            
-            async processTask(task) {
-                const availableWorker = this.workers.find(w => !w.busy);
-                if (!availableWorker) {
-                    this.taskQueue.push(task);
-                    return;
-                }
-                
-                availableWorker.busy = true;
-                this.activeWorkers++;
-                updateWorkerStatus();
-                
-                availableWorker.postMessage({
-                    type: 'DECRYPT',
-                    ciphertext: task.ciphertext,
-                    key: task.key
-                });
-            },
-            
-            handleWorkerMessage(event) {
-                const { type, result, progress } = event.data;
-                
-                switch (type) {
-                    case 'RESULT':
-                        AICracker.evaluateResult(result);
-                        break;
-                    case 'PROGRESS':
-                        updateProgress(progress);
-                        break;
-                }
-                
-                if (type === 'RESULT' || type === 'ERROR') {
-                    this.workers.find(w => w.id === event.target.id).busy = false;
-                    this.activeWorkers--;
-                    updateWorkerStatus();
-                    
-                    if (this.taskQueue.length > 0) {
-                        this.processTask(this.taskQueue.shift());
-                    }
-                }
-            }
-        };
-
-        // ======================
-        // MAIN APPLICATION
-        // ======================
-        async function startAttack() {
-            if (AICracker.state.isRunning) return;
-            
-            const ciphertext = document.getElementById('ciphertext').value.trim();
-            if (!ciphertext) {
-                alert("Please enter ciphertext to decrypt!");
-                return;
-            }
-            
-            // Инициализация системы
-            if (!AICracker.models.keyPredictor) {
-                const success = await AICracker.init();
-                if (!success) return;
-            }
-            
-            AICracker.state.isRunning = true;
-            logOutput(`[ATTACK] Starting AI attack on ciphertext (${ciphertext.length} chars)`);
-            updateAIFeedback("Analyzing ciphertext structure...");
-            
-            // Первичный анализ
-            const analysisStart = performance.now();
-            const initialKeys = await AICracker.predictKeys(ciphertext);
-            updateAIFeedback(`Generated ${initialKeys.length} initial key candidates`);
-            
-            // Запуск обработки
-            initialKeys.forEach(key => {
-                WorkerManager.processTask({
-                    ciphertext,
-                    key
-                });
-            });
-            
-            logOutput(`[SYSTEM] Attack started with ${initialKeys.length} initial keys`);
-        }
+        // Create realistic starfield with 3D positions
+        const universe = document.getElementById('universe');
+        const starCount = 500;
         
-        function stopAttack() {
-            AICracker.state.isRunning = false;
-            WorkerManager.workers.forEach(w => w.terminate());
-            WorkerManager.init();
-            logOutput("[SYSTEM] Attack stopped by user");
-            updateAIFeedback("Attack interrupted");
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            
+            // Random 3D position
+            const x = Math.random() * 2000 - 1000;
+            const y = Math.random() * 2000 - 1000;
+            const z = Math.random() * 2000 - 1000;
+            
+            // Set initial position
+            star.style.left = '50%';
+            star.style.top = '50%';
+            star.style.setProperty('--start-x', `${x}px`);
+            star.style.setProperty('--start-y', `${y}px`);
+            star.style.setProperty('--start-z', `${z}px`);
+            
+            // Calculate drifted position (gravitational lensing effect)
+            const dx = x * (1 + Math.random() * 0.2);
+            const dy = y * (1 + Math.random() * 0.2);
+            const dz = z * (1 + Math.random() * 0.2);
+            
+            star.style.setProperty('--end-x', `${dx}px`);
+            star.style.setProperty('--end-y', `${dy}px`);
+            star.style.setProperty('--end-z', `${dz}px`);
+            
+            // Random star properties
+            const size = Math.random() * 2 + 0.5;
+            const opacity = Math.random() * 0.8 + 0.2;
+            const twinkleSpeed = Math.random() * 10 + 5;
+            const driftSpeed = Math.random() * 30 + 10;
+            
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            star.style.opacity = opacity;
+            star.style.animation = `
+                star-twinkle ${twinkleSpeed}s infinite ease-in-out,
+                star-drift ${driftSpeed}s infinite alternate ease-in-out
+            `;
+            
+            universe.appendChild(star);
         }
 
-        // ======================
-        // UI FUNCTIONS
-        // ======================
-        function logOutput(message) {
-            const output = document.getElementById('output');
-            output.textContent += message + '\n';
-            output.scrollTop = output.scrollHeight;
+        // Doppler effect for relativistic speeds (90% speed of light)
+        function updateDopplerEffect() {
+            const time = Date.now() / 1000;
+            const outerAngle = (time / 15) * Math.PI * 2;
+            const middleAngle = (time / 7.5) * Math.PI * 2;
+            const innerAngle = (time / 3.75) * Math.PI * 2;
+            
+            // Calculate relativistic Doppler factors (v = 0.9c)
+            const outerBlueshift = 1 + 0.9 * Math.sin(outerAngle);
+            const outerRedshift = 1 - 0.9 * Math.sin(outerAngle);
+            
+            const middleBlueshift = 1 + 0.9 * Math.sin(middleAngle);
+            const middleRedshift = 1 - 0.9 * Math.sin(middleAngle);
+            
+            const innerBlueshift = 1 + 0.9 * Math.sin(innerAngle);
+            const innerRedshift = 1 - 0.9 * Math.sin(innerAngle);
+            
+            // Apply to accretion disks
+            document.querySelector('.accretion-disk').style.background = `
+                linear-gradient(90deg, 
+                    rgba(0,0,0,0) 0%, 
+                    rgba(255,${50 * outerRedshift},${30 * outerRedshift},${0.8 * outerRedshift}) 20%, 
+                    rgba(255,255,${50 * outerBlueshift},${0.9 * outerBlueshift}) 50%, 
+                    rgba(255,${50 * outerRedshift},${30 * outerRedshift},${0.8 * outerRedshift}) 80%, 
+                    rgba(0,0,0,0) 100%)`;
+                    
+            document.querySelector('.accretion-disk-middle').style.background = `
+                linear-gradient(90deg, 
+                    rgba(0,0,0,0) 0%, 
+                    rgba(255,${30 * middleRedshift},${20 * middleRedshift},${0.9 * middleRedshift}) 20%, 
+                    rgba(255,255,${30 * middleBlueshift},${1 * middleBlueshift}) 50%, 
+                    rgba(255,${30 * middleRedshift},${20 * middleRedshift},${0.9 * middleRedshift}) 80%, 
+                    rgba(0,0,0,0) 100%)`;
+                    
+            document.querySelector('.accretion-disk-inner').style.background = `
+                linear-gradient(90deg, 
+                    rgba(0,0,0,0) 0%, 
+                    rgba(255,${20 * innerRedshift},${10 * innerRedshift},${1 * innerRedshift}) 20%, 
+                    rgba(255,255,${20 * innerBlueshift},${1 * innerBlueshift}) 50%, 
+                    rgba(255,${20 * innerRedshift},${10 * innerRedshift},${1 * innerRedshift}) 80%, 
+                    rgba(0,0,0,0) 100%)`;
+            
+            requestAnimationFrame(updateDopplerEffect);
         }
         
-        function updateProgress(percent) {
-            document.getElementById('progress-bar').style.width = `${percent}%`;
-        }
-        
-        function updateWorkerStatus() {
-            const elem = document.getElementById('workers-status');
-            elem.textContent = `[${WorkerManager.activeWorkers}/${WorkerManager.workers.length}] Workers active`;
-        }
-        
-        function updateAIFeedback(message) {
-            document.getElementById('ai-feedback').textContent = `[AI] ${message}`;
-        }
-
-        // Инициализация при загрузке
-        window.onload = () => {
-            WorkerManager.init();
-            logOutput("[SYSTEM] Worker system initialized");
-            logOutput("[SYSTEM] Ready for ciphertext input");
-        };
+        updateDopplerEffect();
     </script>
 </body>
 </html>
