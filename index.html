@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Улучшенный шифр Полибия</title>
+    <title>Исправленный шифр Полибия</title>
     <style>
         * {
             box-sizing: border-box;
@@ -12,7 +12,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         body {
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
             color: #fff;
             min-height: 100vh;
             padding: 20px;
@@ -32,9 +32,12 @@
         header {
             text-align: center;
             margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
         }
         h1 {
-            font-size: 2.5rem;
+            font-size: 2.8rem;
             margin-bottom: 10px;
             color: #ffcc00;
             text-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
@@ -49,9 +52,12 @@
         .panel-title {
             color: #4dccbd;
             margin-bottom: 15px;
-            font-size: 1.4rem;
+            font-size: 1.6rem;
             display: flex;
             align-items: center;
+        }
+        .panel-title i {
+            margin-right: 10px;
         }
         .input-group {
             margin-bottom: 20px;
@@ -60,16 +66,16 @@
             display: block;
             margin-bottom: 8px;
             color: #aaa;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
         }
         input, textarea {
             width: 100%;
-            padding: 12px 15px;
+            padding: 14px;
             border-radius: 8px;
             border: 2px solid #444;
             background: rgba(10, 10, 20, 0.7);
             color: #fff;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             transition: all 0.3s;
         }
         input:focus, textarea:focus {
@@ -84,10 +90,10 @@
         }
         button {
             flex: 1;
-            padding: 15px;
+            padding: 16px;
             border: none;
             border-radius: 8px;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s;
@@ -131,11 +137,12 @@
             text-align: center;
             font-weight: bold;
             color: #4dccbd;
+            font-size: 1.2rem;
         }
         .polybius-grid {
             display: grid;
             grid-template-columns: 40px repeat(5, 1fr);
-            gap: 3px;
+            gap: 5px;
         }
         .grid-header {
             background: #333;
@@ -144,17 +151,18 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 10px;
-            height: 50px;
+            padding: 12px;
+            height: 60px;
+            font-size: 1.2rem;
         }
         .grid-cell {
             background: rgba(50, 50, 80, 0.8);
-            border: 1px solid #555;
+            border: 2px solid #555;
             aspect-ratio: 1/1;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.4rem;
+            font-size: 1.8rem;
             font-weight: bold;
             transition: all 0.3s;
         }
@@ -182,14 +190,13 @@
             padding: 20px;
             margin-top: 20px;
             min-height: 200px;
+            font-size: 1.1rem;
         }
         .step {
             margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 1px dashed #444;
-        }
-        .step:last-child {
-            border-bottom: none;
+            padding: 12px;
+            border-radius: 8px;
+            background: rgba(40, 40, 60, 0.6);
         }
         .result-container {
             background: rgba(30, 50, 30, 0.7);
@@ -198,42 +205,46 @@
             margin-top: 20px;
         }
         .result-text {
-            font-size: 1.8rem;
+            font-size: 2rem;
             text-align: center;
             padding: 20px;
             background: rgba(0, 0, 0, 0.3);
             border-radius: 8px;
             font-family: monospace;
             letter-spacing: 3px;
-            min-height: 80px;
+            min-height: 100px;
             display: flex;
             align-items: center;
             justify-content: center;
+            word-break: break-all;
         }
         .highlight {
             color: #ffcc00;
             font-weight: bold;
             background: rgba(255, 204, 0, 0.1);
-            padding: 2px 6px;
+            padding: 3px 8px;
             border-radius: 4px;
-            font-size: 1.2rem;
+            font-size: 1.4rem;
         }
         .error {
             color: #ff5555;
             font-weight: bold;
             margin: 10px 0;
-            padding: 10px;
+            padding: 12px;
             border-radius: 5px;
             background: rgba(255, 85, 85, 0.1);
+            font-size: 1.1rem;
         }
         .explanation {
             margin-top: 20px;
             line-height: 1.6;
             color: #ccc;
+            font-size: 1.1rem;
         }
         .explanation h3 {
             color: #4dccbd;
             margin-bottom: 10px;
+            font-size: 1.4rem;
         }
         footer {
             text-align: center;
@@ -241,6 +252,7 @@
             color: #aaa;
             padding: 20px;
             width: 100%;
+            font-size: 1.1rem;
         }
         @media (max-width: 768px) {
             .polybius-container {
@@ -258,7 +270,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>🔐 Улучшенный шифр Полибия</h1>
+            <h1>🔐 Исправленный шифр Полибия</h1>
             <p>Работает с любыми символами: буквами, цифрами, спецсимволами</p>
         </header>
         
@@ -322,11 +334,13 @@
                 <li>Новые координаты преобразуются обратно в символы</li>
             </ol>
             <p>Дешифрование работает в обратном порядке. Ключ делает шифр более стойким к взлому.</p>
+            <p>Пример: Для символа 'H' с координатами (2,3) и символа ключа 'С' с координатами (1,2) 
+            новые координаты будут (3,5), по которым в квадрате находится символ '0'</p>
         </div>
     </div>
     
     <footer>
-        <p>Улучшенная реализация шифра Полибия | Поддерживает любые символы</p>
+        <p>Исправленная реализация шифра Полибия | Поддерживает любые символы</p>
     </footer>
 
     <script>
