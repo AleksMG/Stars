@@ -1,332 +1,563 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Двойной квадрат Полибия</title>
+    <title>Advanced Vigenère Cipher</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            max-width: 1000px;
-            margin: 0 auto;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: #fff;
+            min-height: 100vh;
             padding: 20px;
-            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
+        
         .container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            padding: 40px;
+            width: 100%;
+            max-width: 1200px;
+            margin: 30px 0;
         }
-        h1, h2 {
-            color: #333;
+        
+        header {
             text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
         }
-        .input-group {
+        
+        h1 {
+            font-size: 3.5rem;
             margin-bottom: 15px;
+            color: #ffcc00;
+            text-shadow: 0 0 15px rgba(255, 204, 0, 0.7);
         }
+        
+        .subtitle {
+            font-size: 1.4rem;
+            color: #ddd;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .card {
+            background: rgba(30, 30, 50, 0.7);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(100, 100, 150, 0.5);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card-title {
+            color: #4dccbd;
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .card-title i {
+            font-size: 1.8rem;
+            color: #ffcc00;
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+        }
+        
         label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+            margin-bottom: 12px;
+            color: #aaa;
+            font-size: 1.2rem;
+            font-weight: 500;
         }
-        input, textarea {
+        
+        input, textarea, select {
             width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
+            padding: 16px 20px;
+            border-radius: 12px;
+            border: 2px solid #444;
+            background: rgba(10, 10, 20, 0.7);
+            color: #fff;
+            font-size: 1.2rem;
+            transition: all 0.3s;
         }
-        textarea {
-            height: 100px;
-            font-family: monospace;
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #4dccbd;
+            box-shadow: 0 0 20px rgba(77, 204, 189, 0.5);
         }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 10px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .squares-container {
+        
+        .btn-group {
             display: flex;
             gap: 20px;
-            margin: 20px 0;
-            flex-wrap: wrap;
+            margin: 30px 0;
         }
-        .square {
+        
+        button {
+            flex: 1;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        
+        .encrypt-btn {
+            background: linear-gradient(to right, #4CAF50, #2E8B57);
+            color: white;
+        }
+        
+        .decrypt-btn {
+            background: linear-gradient(to right, #f44336, #B22222);
+            color: white;
+        }
+        
+        .reset-btn {
+            background: linear-gradient(to right, #2196F3, #0D47A1);
+            color: white;
+        }
+        
+        button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+        
+        .result-container {
+            background: rgba(30, 50, 30, 0.7);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 20px;
+        }
+        
+        .result-text {
+            font-size: 1.8rem;
+            text-align: center;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            font-family: monospace;
+            letter-spacing: 3px;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            word-break: break-all;
+            border: 2px dashed #4dccbd;
+        }
+        
+        .mapping-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .mapping {
             flex: 1;
             min-width: 300px;
+            background: rgba(20, 20, 40, 0.8);
+            border-radius: 15px;
+            padding: 25px;
         }
-        .square-grid {
+        
+        .mapping-title {
+            color: #ffcc00;
+            margin-bottom: 20px;
+            font-size: 1.6rem;
+            text-align: center;
+        }
+        
+        .mapping-grid {
             display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 5px;
-            margin-top: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 15px;
         }
-        .square-header {
-            background-color: #333;
-            color: white;
-            padding: 10px;
+        
+        .mapping-item {
+            background: rgba(50, 50, 80, 0.8);
+            border: 2px solid #555;
+            border-radius: 10px;
+            padding: 15px 10px;
             text-align: center;
             font-weight: bold;
+            font-size: 1.4rem;
+            transition: all 0.3s;
         }
-        .square-cell {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-            background-color: #f9f9f9;
-            font-weight: bold;
+        
+        .mapping-item:hover {
+            transform: scale(1.1);
+            background: #4dccbd;
+            color: #000;
+            box-shadow: 0 0 20px rgba(77, 204, 189, 0.7);
         }
-        .active {
-            background-color: #4dccbd;
-            color: white;
+        
+        .explanation {
+            margin-top: 40px;
+            line-height: 1.8;
+            color: #ddd;
+            font-size: 1.2rem;
         }
-        .process-steps {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #f0f0f0;
+        
+        .explanation h2 {
+            color: #4dccbd;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+        
+        .explanation ol {
+            padding-left: 30px;
+            margin: 20px 0;
+        }
+        
+        .explanation li {
+            margin-bottom: 15px;
+        }
+        
+        .highlight {
+            background: rgba(255, 204, 0, 0.2);
+            padding: 3px 8px;
             border-radius: 5px;
+            color: #ffcc00;
         }
-        .error {
-            color: red;
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #aaa;
+            padding: 30px;
+            width: 100%;
+            font-size: 1.1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .security-badge {
+            display: inline-block;
+            background: linear-gradient(to right, #4CAF50, #2E8B57);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 30px;
+            margin-top: 15px;
             font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .mapping-container {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Двойной квадрат Полибия</h1>
-        <p style="text-align: center;">Символьный квадрат + Буквенный квадрат</p>
+        <header>
+            <h1><i class="fas fa-lock"></i> Advanced Vigenère Cipher</h1>
+            <p class="subtitle">A polyalphabetic substitution cipher with custom alphabet and symbol mapping for enhanced security</p>
+        </header>
         
-        <div class="input-group">
-            <label for="symbols">25 уникальных символов (для символьного квадрата 5x5):</label>
-            <input type="text" id="symbols" maxlength="25" 
-                   value="%$#=*-<+!?1234567890zzwo" placeholder="Например: %$#=*-<+!?1234567890zzwo">
-        </div>
-        
-        <div class="input-group">
-            <label for="alphabet">25 букв (для буквенного квадрата 5x5):</label>
-            <input type="text" id="alphabet" maxlength="25" 
-                   value="абвгдеёжзийклмнопрстуфхцч" placeholder="Например: абвгдеёжзийклмнопрстуфхцч">
-        </div>
-        
-        <div class="input-group">
-            <label for="key">Ключ шифрования:</label>
-            <input type="text" id="key" value="секрет" placeholder="Введите ключ">
-        </div>
-        
-        <div class="input-group">
-            <label for="inputText">Исходный текст:</label>
-            <textarea id="inputText">ПРИВЕТ</textarea>
-        </div>
-        
-        <button onclick="encrypt()">Зашифровать</button>
-        <button onclick="decrypt()">Расшифровать</button>
-        
-        <div class="input-group">
-            <label for="outputText">Результат:</label>
-            <textarea id="outputText" readonly></textarea>
-        </div>
-        
-        <div class="squares-container">
-            <div class="square">
-                <h2>Символьный квадрат</h2>
-                <div class="square-grid" id="symbolSquare"></div>
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-cog"></i>
+                <span>Cipher Configuration</span>
             </div>
-            <div class="square">
-                <h2>Буквенный квадрат</h2>
-                <div class="square-grid" id="letterSquare"></div>
+            
+            <div class="input-group">
+                <label for="alphabet"><i class="fas fa-font"></i> Custom Alphabet (e.g., ABCDEFGHIJKLMNOPQRSTUVWXYZ)</label>
+                <input type="text" id="alphabet" value="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789">
+            </div>
+            
+            <div class="input-group">
+                <label for="symbols"><i class="fas fa-symbols"></i> Symbol Mapping (must match alphabet length)</label>
+                <input type="text" id="symbols" value="!@#$%^&*()_+-=[]{}|;:,.<>?~`§±Ω≈√∫∞♠♣♥♦♪♫☼►◄▲▼◊">
+            </div>
+            
+            <div class="input-group">
+                <label for="key"><i class="fas fa-key"></i> Encryption Key</label>
+                <input type="text" id="key" value="SECRETKEY2023">
+            </div>
+            
+            <div class="input-group">
+                <label for="inputText"><i class="fas fa-keyboard"></i> Input Text</label>
+                <textarea id="inputText" placeholder="Enter text to encrypt or decrypt">Confidential data: Operation Midnight</textarea>
+            </div>
+            
+            <div class="btn-group">
+                <button class="encrypt-btn" onclick="encrypt()">
+                    <i class="fas fa-lock"></i> Encrypt
+                </button>
+                <button class="decrypt-btn" onclick="decrypt()">
+                    <i class="fas fa-lock-open"></i> Decrypt
+                </button>
+                <button class="reset-btn" onclick="resetAll()">
+                    <i class="fas fa-redo"></i> Reset
+                </button>
             </div>
         </div>
         
-        <div class="process-steps" id="processSteps"></div>
+        <div class="mapping-container">
+            <div class="mapping">
+                <div class="mapping-title">
+                    <i class="fas fa-font"></i> Alphabet Mapping
+                </div>
+                <div class="mapping-grid" id="alphabetMapping"></div>
+            </div>
+            
+            <div class="mapping">
+                <div class="mapping-title">
+                    <i class="fas fa-symbols"></i> Symbol Mapping
+                </div>
+                <div class="mapping-grid" id="symbolMapping"></div>
+            </div>
+        </div>
+        
+        <div class="result-container">
+            <div class="card-title">
+                <i class="fas fa-terminal"></i>
+                <span>Output Result</span>
+            </div>
+            <div class="result-text" id="outputText">
+                Your encrypted/decrypted text will appear here
+            </div>
+        </div>
+        
+        <div class="explanation">
+            <h2><i class="fas fa-lightbulb"></i> How the Advanced Vigenère Cipher Works</h2>
+            <p>This implementation enhances the classic Vigenère cipher with two security features:</p>
+            
+            <ol>
+                <li><span class="highlight">Custom Alphabet</span> - Define your own character set rather than using standard A-Z</li>
+                <li><span class="highlight">Symbol Mapping</span> - Map each alphabet character to a unique symbol for additional obfuscation</li>
+            </ol>
+            
+            <h3>Encryption Process:</h3>
+            <p>For each character in the plaintext:</p>
+            <ol>
+                <li>Find the character in the custom alphabet (position P)</li>
+                <li>Find the corresponding key character (position K)</li>
+                <li>Calculate the cipher position: (P + K) mod alphabet_length</li>
+                <li>Map the resulting position to the corresponding symbol</li>
+            </ol>
+            
+            <h3>Decryption Process:</h3>
+            <p>For each symbol in the ciphertext:</p>
+            <ol>
+                <li>Find the symbol's position in the symbol mapping (position S)</li>
+                <li>Find the corresponding key character (position K)</li>
+                <li>Calculate the original position: (S - K + alphabet_length) mod alphabet_length</li>
+                <li>Map the resulting position to the original alphabet character</li>
+            </ol>
+            
+            <div class="security-badge">
+                <i class="fas fa-shield-alt"></i> POLYALPHABETIC SECURITY
+            </div>
+        </div>
     </div>
+    
+    <footer>
+        <p>Advanced Cryptographic System | Vigenère Cipher with Custom Alphabet & Symbol Mapping</p>
+        <p>This implementation provides enhanced security through double mapping and key-based shifting</p>
+    </footer>
 
     <script>
-        let symbolSquare = [];
-        let letterSquare = [];
-        
-        // Инициализация квадратов
-        function initSquares() {
-            const symbols = document.getElementById('symbols').value.trim();
-            const alphabet = document.getElementById('alphabet').value.trim();
+        // Initialize the cipher mappings
+        function initMappings() {
+            const alphabet = document.getElementById('alphabet').value;
+            const symbols = document.getElementById('symbols').value;
             
-            // Очистка
-            document.getElementById('symbolSquare').innerHTML = '';
-            document.getElementById('letterSquare').innerHTML = '';
+            // Clear previous mappings
+            document.getElementById('alphabetMapping').innerHTML = '';
+            document.getElementById('symbolMapping').innerHTML = '';
             
-            // Проверки
-            if (symbols.length !== 25 || alphabet.length !== 25) {
-                alert("Оба квадрата должны содержать ровно 25 символов!");
-                return false;
+            // Create alphabet mapping display
+            for (let char of alphabet) {
+                const div = document.createElement('div');
+                div.className = 'mapping-item';
+                div.textContent = char;
+                div.title = `Alphabet character: ${char}`;
+                document.getElementById('alphabetMapping').appendChild(div);
             }
             
-            // Создаем квадраты
-            symbolSquare = createSquare(symbols, 'symbolSquare');
-            letterSquare = createSquare(alphabet, 'letterSquare');
-            
-            return true;
+            // Create symbol mapping display
+            for (let symbol of symbols) {
+                const div = document.createElement('div');
+                div.className = 'mapping-item';
+                div.textContent = symbol;
+                div.title = `Symbol mapping: ${symbol}`;
+                document.getElementById('symbolMapping').appendChild(div);
+            }
         }
         
-        // Создание одного квадрата
-        function createSquare(chars, elementId) {
-            const square = [];
-            const grid = document.getElementById(elementId);
-            
-            // Заголовки столбцов
-            const headerRow = document.createElement('div');
-            headerRow.className = 'square-header';
-            headerRow.textContent = '';
-            grid.appendChild(headerRow);
-            
-            for (let col = 1; col <= 5; col++) {
-                const header = document.createElement('div');
-                header.className = 'square-header';
-                header.textContent = col;
-                grid.appendChild(header);
-            }
-            
-            // Заполнение квадрата
-            for (let row = 0; row < 5; row++) {
-                const rowHeader = document.createElement('div');
-                rowHeader.className = 'square-header';
-                rowHeader.textContent = row + 1;
-                grid.appendChild(rowHeader);
-                
-                const currentRow = [];
-                
-                for (let col = 0; col < 5; col++) {
-                    const index = row * 5 + col;
-                    const char = chars[index];
-                    
-                    const cell = document.createElement('div');
-                    cell.className = 'square-cell';
-                    cell.textContent = char;
-                    cell.dataset.row = row + 1;
-                    cell.dataset.col = col + 1;
-                    grid.appendChild(cell);
-                    
-                    currentRow.push(char);
-                }
-                
-                square.push(currentRow);
-            }
-            
-            return square;
-        }
-        
-        // Шифрование
+        // Encrypt text
         function encrypt() {
-            if (!initSquares()) return;
+            const alphabet = document.getElementById('alphabet').value;
+            const symbols = document.getElementById('symbols').value;
+            const key = document.getElementById('key').value;
+            const inputText = document.getElementById('inputText').value.toUpperCase();
+            let output = '';
             
-            const text = document.getElementById('inputText').value.toLowerCase();
-            const key = document.getElementById('key').value.toLowerCase();
-            let result = '';
-            let steps = [];
-            
-            for (let i = 0; i < text.length; i++) {
-                const char = text[i];
-                const keyChar = key[i % key.length];
-                
-                // 1. Находим букву в буквенном квадрате
-                const letterCoords = findCoordinates(char, letterSquare);
-                if (!letterCoords) {
-                    result += char;
-                    steps.push(`Буква '${char}' не найдена в буквенном квадрате`);
-                    continue;
-                }
-                
-                // 2. Находим ключевую букву в буквенном квадрате
-                const keyCoords = findCoordinates(keyChar, letterSquare);
-                if (!keyCoords) {
-                    result += char;
-                    steps.push(`Ключевая буква '${keyChar}' не найдена`);
-                    continue;
-                }
-                
-                // 3. Вычисляем новые координаты (сдвиг)
-                const newRow = (letterCoords.row + keyCoords.row - 2) % 5;
-                const newCol = (letterCoords.col + keyCoords.col - 2) % 5;
-                
-                // 4. Берем символ из символьного квадрата
-                const symbol = symbolSquare[newRow][newCol];
-                result += symbol;
-                
-                steps.push(`'${char}' (${letterCoords.row},${letterCoords.col}) + '${keyChar}' → '${symbol}' (${newRow+1},${newCol+1})`);
+            // Validate inputs
+            if (alphabet.length !== symbols.length) {
+                alert("Alphabet and symbols must have the same length!");
+                return;
             }
             
-            document.getElementById('outputText').value = result;
-            document.getElementById('processSteps').innerHTML = 
-                '<h3>Процесс шифрования:</h3>' + 
-                steps.map(step => `<div>${step}</div>`).join('');
+            if (key.length === 0) {
+                alert("Encryption key cannot be empty!");
+                return;
+            }
+            
+            let keyIndex = 0;
+            
+            for (let i = 0; i < inputText.length; i++) {
+                const char = inputText[i];
+                const keyChar = key[keyIndex % key.length].toUpperCase();
+                
+                // Find position in alphabet
+                const charIndex = alphabet.indexOf(char);
+                
+                if (charIndex === -1) {
+                    // Character not in alphabet - leave as is
+                    output += char;
+                    continue;
+                }
+                
+                // Find key character position
+                const keyIndexPos = alphabet.indexOf(keyChar);
+                
+                if (keyIndexPos === -1) {
+                    output += char;
+                    continue;
+                }
+                
+                // Calculate cipher position
+                const cipherIndex = (charIndex + keyIndexPos) % alphabet.length;
+                
+                // Map to symbol
+                output += symbols[cipherIndex];
+                
+                // Move to next key character
+                keyIndex++;
+            }
+            
+            document.getElementById('outputText').textContent = output;
         }
         
-        // Дешифрование
+        // Decrypt text
         function decrypt() {
-            if (!initSquares()) return;
+            const alphabet = document.getElementById('alphabet').value;
+            const symbols = document.getElementById('symbols').value;
+            const key = document.getElementById('key').value;
+            const inputText = document.getElementById('inputText').value;
+            let output = '';
             
-            const text = document.getElementById('inputText').value;
-            const key = document.getElementById('key').value.toLowerCase();
-            let result = '';
-            let steps = [];
+            // Validate inputs
+            if (alphabet.length !== symbols.length) {
+                alert("Alphabet and symbols must have the same length!");
+                return;
+            }
             
-            for (let i = 0; i < text.length; i++) {
-                const symbol = text[i];
-                const keyChar = key[i % key.length];
+            if (key.length === 0) {
+                alert("Encryption key cannot be empty!");
+                return;
+            }
+            
+            let keyIndex = 0;
+            
+            for (let i = 0; i < inputText.length; i++) {
+                const symbol = inputText[i];
+                const keyChar = key[keyIndex % key.length].toUpperCase();
                 
-                // 1. Находим символ в символьном квадрате
-                const symbolCoords = findCoordinates(symbol, symbolSquare);
-                if (!symbolCoords) {
-                    result += symbol;
-                    steps.push(`Символ '${symbol}' не найден`);
+                // Find position in symbols
+                const symbolIndex = symbols.indexOf(symbol);
+                
+                if (symbolIndex === -1) {
+                    // Symbol not in mapping - leave as is
+                    output += symbol;
                     continue;
                 }
                 
-                // 2. Находим ключевую букву в буквенном квадрате
-                const keyCoords = findCoordinates(keyChar, letterSquare);
-                if (!keyCoords) {
-                    result += symbol;
-                    steps.push(`Ключевая буква '${keyChar}' не найдена`);
+                // Find key character position
+                const keyIndexPos = alphabet.indexOf(keyChar);
+                
+                if (keyIndexPos === -1) {
+                    output += symbol;
                     continue;
                 }
                 
-                // 3. Вычисляем исходные координаты (обратный сдвиг)
-                const origRow = (symbolCoords.row - keyCoords.row + 5) % 5;
-                const origCol = (symbolCoords.col - keyCoords.col + 5) % 5;
+                // Calculate original position
+                let originalIndex = symbolIndex - keyIndexPos;
+                if (originalIndex < 0) {
+                    originalIndex += alphabet.length;
+                }
+                originalIndex = originalIndex % alphabet.length;
                 
-                // 4. Берем букву из буквенного квадрата
-                const letter = letterSquare[origRow][origCol];
-                result += letter;
+                // Map to alphabet character
+                output += alphabet[originalIndex];
                 
-                steps.push(`'${symbol}' (${symbolCoords.row},${symbolCoords.col}) - '${keyChar}' → '${letter}' (${origRow+1},${origCol+1})`);
+                // Move to next key character
+                keyIndex++;
             }
             
-            document.getElementById('outputText').value = result;
-            document.getElementById('processSteps').innerHTML = 
-                '<h3>Процесс дешифрования:</h3>' + 
-                steps.map(step => `<div>${step}</div>`).join('');
+            document.getElementById('outputText').textContent = output;
         }
         
-        // Поиск координат символа в квадрате
-        function findCoordinates(char, square) {
-            for (let row = 0; row < 5; row++) {
-                for (let col = 0; col < 5; col++) {
-                    if (square[row][col] === char) {
-                        return { row: row + 1, col: col + 1 };
-                    }
-                }
-            }
-            return null;
+        // Reset all fields
+        function resetAll() {
+            document.getElementById('alphabet').value = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            document.getElementById('symbols').value = "!@#$%^&*()_+-=[]{}|;:,.<>?~`§±Ω≈√∫∞♠♣♥♦♪♫☼►◄▲▼◊";
+            document.getElementById('key').value = "SECRETKEY2023";
+            document.getElementById('inputText').value = "Confidential data: Operation Midnight";
+            document.getElementById('outputText').textContent = "Your encrypted/decrypted text will appear here";
+            initMappings();
         }
         
-        // Инициализация при загрузке
-        window.onload = initSquares;
+        // Initialize on load
+        window.onload = function() {
+            initMappings();
+            
+            // Add input listeners to update mappings
+            document.getElementById('alphabet').addEventListener('input', initMappings);
+            document.getElementById('symbols').addEventListener('input', initMappings);
+        }
     </script>
 </body>
 </html>
